@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homemade Love - Student Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- --- LANDING / LOGIN SCREEN --- -->
+    <div id="role-screen" class="screen active">
+        <header class="main-header">
+            <h1>🍲 Homemade Love</h1>
+            <p>Connecting Home Kitchens with Hungry Hearts</p>
+        </header>
+        <div class="role-container">
+            <h2>Who are you?</h2>
+            <div class="role-buttons">
+                <button class="btn btn-primary btn-large" onclick="goToLogin('cook')">👩‍🍳 I am a Mother (Cook)</button>
+                <button class="btn btn-primary btn-large" onclick="goToLogin('student')">🧑‍💻 I am a Student</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- AUTH SCREEN --- -->
+    <div id="auth-screen" class="screen">
+        <div class="auth-card">
+            <h2 id="auth-title">Create Account</h2>
+            <p class="subtitle">Please enter your details to continue.</p>
+            <form id="detailsForm" onsubmit="handleLogin(event)">
+                <input type="text" id="u_name" placeholder="Full Name" required>
+                <input type="email" id="u_email" placeholder="Email Address" required>
+                <input type="tel" id="u_mobile" placeholder="Mobile Number" required>
+                <textarea id="u_address" rows="3" placeholder="Delivery Address" required></textarea>
+                <button type="submit" class="btn btn-primary full-width">Enter Kitchen</button>
+            </form>
+            <button class="btn btn-text" onclick="showScreen('role')">Back</button>
+        </div>
+    </div>
+
+    <!-- --- MOTHER DASHBOARD --- -->
+    <div id="mother-dashboard-screen" class="screen">
+        <header class="dashboard-header">
+            <h3>👩‍🍳 Mother's Kitchen</h3>
+            <button class="btn btn-small" onclick="logout()">Logout</button>
+        </header>
+        <div class="container">
+            <div class="message-box">
+                <h4>📢 Daily Message to Kids</h4>
+                <input type="text" id="motherBroadcastInput" value="Eat healthy beta!">
+                <button class="btn btn-small" onclick="updateBroadcast()">Update</button>
+            </div>
+            <div class="card" style="background:white; padding:15px; border-radius:8px;">
+                <h3>➕ Add Menu Item</h3>
+                <select id="mealCategory">
+                    <option value="breakfast">Breakfast</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="snack">Snacks</option>
+                    <option value="dinner">Dinner</option>
+                </select>
+                <input type="text" id="foodName" placeholder="Item Name">
+                <input type="number" id="foodPrice" placeholder="Price">
+                <button class="btn btn-primary full-width" onclick="addFoodItem()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- STUDENT DASHBOARD --- -->
+    <div id="student-dashboard-screen" class="screen">
+        
+        <!-- 1. Student Header with Search & Icons -->
+        <nav class="student-nav">
+            <div class="nav-brand">🍲 H-Love</div>
+            
+            <div class="search-bar-container">
+                <input type="text" id="searchInput" placeholder="Search for Poha, Thali..." onkeyup="searchMenu()">
+                <button class="search-btn">🔍</button>
+            </div>
+
+            <div class="nav-icons">
+                <div class="icon-wrap" onclick="toggleNotifications()">
+                    🔔 <span id="notif-badge" class="badge">1</span>
+                    <!-- Notification Dropdown -->
+                    <div id="notif-dropdown" class="dropdown hidden">
+                        <h4>Notifications</h4>
+                        <ul id="notif-list">
+                            <li>Mom accepted your order! 🍳</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="icon-wrap" onclick="scrollToCart()">
+                    🛒 <span id="cart-count" class="badge">0</span>
+                </div>
+                
+                <div class="icon-wrap" onclick="openProfile()">
+                    👤
+                </div>
+            </div>
+        </nav>
+
+        <div class="container main-layout">
+            
+            <!-- Left: Menu Area -->
+            <div class="menu-section">
+                <!-- Banner -->
+                <div class="love-banner">
+                    <span class="heart">❤️</span> <span id="studentBroadcastDisplay">"Welcome home!"</span>
+                </div>
+
+                <!-- Categories -->
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="filterMenu('breakfast')">Breakfast</button>
+                    <button class="tab-btn" onclick="filterMenu('lunch')">Lunch</button>
+                    <button class="tab-btn" onclick="filterMenu('snack')">Snacks</button>
+                    <button class="tab-btn" onclick="filterMenu('dinner')">Dinner</button>
+                </div>
+
+                <h3 id="menuTitle">Breakfast Menu</h3>
+                <div id="studentMenuList" class="food-grid">
+                    <!-- Items injected by JS -->
+                </div>
+            </div>
+
+            <!-- Right: Cart Area (Sticky) -->
+            <div class="cart-section" id="cart-anchor">
+                <div class="cart-card">
+                    <h3>🛒 Your Plate</h3>
+                    <ul id="cartList" class="cart-list">
+                        <li class="empty-state">Plate is empty</li>
+                    </ul>
+                    <div class="cart-total">Total: ₹<span id="cartTotal">0</span></div>
+                    <textarea id="studentNote" placeholder="Note to Mom (e.g., Extra spicy please)"></textarea>
+                    <button class="btn btn-primary full-width" onclick="placeOrder()">Place Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- PROFILE MODAL --- -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content profile-content">
+            <span class="close-btn" onclick="closeProfile()">&times;</span>
+            <div class="profile-header">
+                <div class="avatar">👤</div>
+                <h3 id="profile-name">Student Name</h3>
+                <p>Student</p>
+            </div>
+            <div class="profile-details">
+                <p><strong>📞 Mobile:</strong> <span id="profile-mobile">--</span></p>
+                <p><strong>📍 Address:</strong> <span id="profile-address">--</span></p>
+                <hr>
+                <button class="btn btn-secondary full-width" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- CUSTOMIZATION MODAL --- -->
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <h3>Customize Meal</h3>
+            <p id="modalFoodName" class="highlight-text">Food Name</p>
+            
+            <label>Preferences:</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="opt-spicy"> Less Spicy 🌶️</label>
+                <label><input type="checkbox" id="opt-oil"> Less Oil 🛢️</label>
+                <label><input type="checkbox" id="opt-sugar"> Less Sugar 🍬</label>
+            </div>
+            
+            <label>Add a Note:</label>
+            <input type="text" id="customNote" placeholder="e.g., No onions please">
+
+            <div class="modal-actions">
+                <button class="btn btn-text" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmAddToCart()">Add to Plate</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script> 
+</body>
+</html>
