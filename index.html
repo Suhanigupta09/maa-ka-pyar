@@ -3,178 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homemade Love - Student Dashboard</title>
+    <title>माँ का प्यार - Maa Ka Pyaar</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- --- LANDING / LOGIN SCREEN --- -->
+    <!-- --- LANDING SCREEN (Start Here) --- -->
     <div id="role-screen" class="screen active">
         <header class="main-header">
-            <h1>🍲 Homemade Love</h1>
+            <h1>❤️ माँ का प्यार (Maa Ka Pyaar)</h1>
             <p>Connecting Home Kitchens with Hungry Hearts</p>
         </header>
         <div class="role-container">
             <h2>Who are you?</h2>
             <div class="role-buttons">
+                <!-- These buttons set the role in JS -->
                 <button class="btn btn-primary btn-large" onclick="goToLogin('cook')">👩‍🍳 I am a Mother (Cook)</button>
                 <button class="btn btn-primary btn-large" onclick="goToLogin('student')">🧑‍💻 I am a Student</button>
             </div>
         </div>
     </div>
 
-    <!-- --- AUTH SCREEN --- -->
+    <!-- --- AUTH SCREEN (Login Form) --- -->
     <div id="auth-screen" class="screen">
         <div class="auth-card">
             <h2 id="auth-title">Create Account</h2>
-            <p class="subtitle">Please enter your details to continue.</p>
+            <p class="subtitle">Enter your details to continue.</p>
+            
             <form id="detailsForm" onsubmit="handleLogin(event)">
-                <input type="text" id="u_name" placeholder="Full Name" required>
-                <input type="email" id="u_email" placeholder="Email Address" required>
+                <input type="text" id="u_name" placeholder="Your Name (e.g. Suman)" required>
                 <input type="tel" id="u_mobile" placeholder="Mobile Number" required>
-                <textarea id="u_address" rows="3" placeholder="Delivery Address" required></textarea>
-                <button type="submit" class="btn btn-primary full-width">Enter Kitchen</button>
+                <button type="submit" class="btn btn-primary full-width">Enter Dashboard</button>
             </form>
+            
             <button class="btn btn-text" onclick="showScreen('role')">Back</button>
         </div>
     </div>
 
     <!-- --- MOTHER DASHBOARD --- -->
     <div id="mother-dashboard-screen" class="screen">
-        <header class="dashboard-header">
-            <h3>👩‍🍳 Mother's Kitchen</h3>
-            <button class="btn btn-small" onclick="logout()">Logout</button>
-        </header>
-        <div class="container">
-            <div class="message-box">
-                <h4>📢 Daily Message to Kids</h4>
-                <input type="text" id="motherBroadcastInput" value="Eat healthy beta!">
-                <button class="btn btn-small" onclick="updateBroadcast()">Update</button>
+        <nav class="student-nav" style="border-bottom: 4px solid var(--warm-yellow);">
+            <div class="nav-brand">👩‍🍳 My Kitchen Control</div>
+            <div class="nav-icons">
+                <button class="btn btn-small" onclick="showScreen('mother-history')">📜 Order History</button>
+                <span>Welcome, <b id="mom-name-display">Mother</b></span>
+                <button class="btn btn-small btn-secondary" onclick="logout()">Logout</button>
             </div>
-            <div class="card" style="background:white; padding:15px; border-radius:8px;">
-                <h3>➕ Add Menu Item</h3>
-                <select id="mealCategory">
-                    <option value="breakfast">Breakfast</option>
-                    <option value="lunch">Lunch</option>
-                    <option value="snack">Snacks</option>
-                    <option value="dinner">Dinner</option>
-                </select>
-                <input type="text" id="foodName" placeholder="Item Name">
-                <input type="number" id="foodPrice" placeholder="Price">
-                <button class="btn btn-primary full-width" onclick="addFoodItem()">Add</button>
+        </nav>
+
+        <div class="container main-layout">
+            <!-- LEFT COLUMN: Orders & Profile -->
+            <div class="menu-section">
+                
+                <!-- Incoming Orders Panel -->
+                <div class="card orders-panel">
+                    <h3>🔔 Incoming Orders</h3>
+                    <div id="motherOrderList" class="orders-list">
+                        <p class="empty-state">No orders yet. Waiting for students...</p>
+                    </div>
+                </div>
+
+                <!-- Kitchen Profile Settings -->
+                <div class="kitchen-card" style="margin-top: 20px;">
+                    <div class="kitchen-info">
+                        <h3>🏠 Kitchen Profile</h3>
+                        <label class="small-label">Restaurant Name</label>
+                        <input type="text" id="kitchenNameInput">
+                        
+                        <label class="small-label">Specialty</label>
+                        <input type="text" id="kitchenSpecInput">
+                        
+                        <button class="btn btn-secondary full-width" onclick="saveKitchenProfile()">Update Profile</button>
+                    </div>
+                </div>
+
+                <!-- Kitchen Timing Settings -->
+                <div class="kitchen-card" style="margin-top: 20px;">
+                    <div class="kitchen-info">
+                        <h3>⏰ Kitchen Timing</h3>
+                        
+                        <label class="small-label">
+                            <input type="checkbox" id="autoTimingCheckbox" onchange="toggleTimingMode()"> 
+                            Automatic Timing (9 AM - 9 PM)
+                        </label>
+                        
+                        <div id="manualTimingSection">
+                            <label class="small-label">Opening Time</label>
+                            <input type="time" id="openingTime" value="09:00">
+                            
+                            <label class="small-label">Closing Time</label>
+                            <input type="time" id="closingTime" value="21:00">
+                        </div>
+                        
+                        <label class="small-label" style="margin-top: 10px;">
+                            <input type="checkbox" id="kitchenOpenCheckbox" onchange="toggleKitchenStatus()"> 
+                            Kitchen is Currently Open
+                        </label>
+                        
+                        <button class="btn btn-secondary full-width" onclick="saveKitchenTiming()">Save Timing</button>
+                        
+                        <div id="kitchenStatusDisplay" style="margin-top: 10px; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold;">
+                            Status: <span id="statusText">Closed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Menu Management -->
+            <div class="cart-section">
+                <div class="cart-card">
+                    <h3>🍲 Manage Menu</h3>
+                    <div class="add-menu-form">
+                        <h4 style="margin-bottom: 10px;">+ Add New Item</h4>
+                        <select id="newItemCategory">
+                            <option value="breakfast">Breakfast</option>
+                            <option value="lunch">Lunch</option>
+                            <option value="snack">Snacks</option>
+                            <option value="dinner">Dinner</option>
+                        </select>
+                        <input type="text" id="newItemName" placeholder="Item Name (e.g. Poha)">
+                        <input type="number" id="newItemPrice" placeholder="Price (₹)">
+                        
+                        <label class="small-label">Item Image (Optional)</label>
+                        <input type="file" id="newItemImage" accept="image/*" onchange="previewImage(event)">
+                        <div id="imagePreview" style="display: none; margin: 10px 0;">
+                            <img id="previewImg" style="max-width: 100%; max-height: 150px; border-radius: 8px; object-fit: cover;">
+                        </div>
+                        
+                        <button class="btn btn-primary full-width" onclick="addMyMenuItem()">Add to Menu</button>
+                    </div>
+
+                    <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ddd;">
+
+                    <h4>Active Menu:</h4>
+                    <ul id="myMenuList" class="cart-list" style="max-height: 400px;"></ul>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- --- STUDENT DASHBOARD --- -->
     <div id="student-dashboard-screen" class="screen">
-        
-        <!-- 1. Student Header with Search & Icons -->
         <nav class="student-nav">
             <div class="nav-brand">🍲 H-Love</div>
-            
-            <div class="search-bar-container">
-                <input type="text" id="searchInput" placeholder="Search for Poha, Thali..." onkeyup="searchMenu()">
-                <button class="search-btn">🔍</button>
-            </div>
-
             <div class="nav-icons">
+                <button class="btn btn-small" onclick="showScreen('student-history')">📜 My Orders</button>
                 <div class="icon-wrap" onclick="toggleNotifications()">
-                    🔔 <span id="notif-badge" class="badge">1</span>
-                    <!-- Notification Dropdown -->
+                    🔔 <span id="notif-badge" class="badge" style="display:none">0</span>
                     <div id="notif-dropdown" class="dropdown hidden">
                         <h4>Notifications</h4>
-                        <ul id="notif-list">
-                            <li>Mom accepted your order! 🍳</li>
-                        </ul>
+                        <ul id="notif-list"><li class="empty-state">No new alerts</li></ul>
                     </div>
                 </div>
-                
                 <div class="icon-wrap" onclick="scrollToCart()">
                     🛒 <span id="cart-count" class="badge">0</span>
                 </div>
-                
-                <div class="icon-wrap" onclick="openProfile()">
-                    👤
-                </div>
+                <button class="btn btn-small" onclick="logout()">Logout</button>
             </div>
         </nav>
 
         <div class="container main-layout">
-            
-            <!-- Left: Menu Area -->
             <div class="menu-section">
-                <!-- Banner -->
-                <div class="love-banner">
-                    <span class="heart">❤️</span> <span id="studentBroadcastDisplay">"Welcome home!"</span>
+
+                <!-- Kitchen List -->
+                <div id="kitchens-list-view">
+                    <h3 class="section-title">🏠 Select a Mother's Kitchen</h3>
+                    <div id="kitchensGrid" class="kitchen-grid"></div>
                 </div>
 
-                <!-- Categories -->
-                <div class="tabs">
-                    <button class="tab-btn active" onclick="filterMenu('breakfast')">Breakfast</button>
-                    <button class="tab-btn" onclick="filterMenu('lunch')">Lunch</button>
-                    <button class="tab-btn" onclick="filterMenu('snack')">Snacks</button>
-                    <button class="tab-btn" onclick="filterMenu('dinner')">Dinner</button>
-                </div>
-
-                <h3 id="menuTitle">Breakfast Menu</h3>
-                <div id="studentMenuList" class="food-grid">
-                    <!-- Items injected by JS -->
+                <!-- Single Menu -->
+                <div id="single-kitchen-view" class="hidden">
+                    <button class="btn-text back-btn" onclick="backToKitchens()">← Back to Kitchens</button>
+                    <div class="kitchen-header">
+                        <h2 id="activeKitchenName">Kitchen Name</h2>
+                        <span id="activeKitchenRating" class="rating">⭐ 5.0</span>
+                    </div>
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="filterMenu('breakfast')">Breakfast</button>
+                        <button class="tab-btn" onclick="filterMenu('lunch')">Lunch</button>
+                        <button class="tab-btn" onclick="filterMenu('snack')">Snacks</button>
+                        <button class="tab-btn" onclick="filterMenu('dinner')">Dinner</button>
+                    </div>
+                    <div id="studentMenuList" class="food-grid"></div>
                 </div>
             </div>
 
-            <!-- Right: Cart Area (Sticky) -->
             <div class="cart-section" id="cart-anchor">
                 <div class="cart-card">
                     <h3>🛒 Your Plate</h3>
-                    <ul id="cartList" class="cart-list">
-                        <li class="empty-state">Plate is empty</li>
-                    </ul>
+                    <ul id="cartList" class="cart-list"><li class="empty-state">Plate is empty</li></ul>
                     <div class="cart-total">Total: ₹<span id="cartTotal">0</span></div>
-                    <textarea id="studentNote" placeholder="Note to Mom (e.g., Extra spicy please)"></textarea>
                     <button class="btn btn-primary full-width" onclick="placeOrder()">Place Order</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- --- PROFILE MODAL --- -->
-    <div id="profileModal" class="modal">
-        <div class="modal-content profile-content">
-            <span class="close-btn" onclick="closeProfile()">&times;</span>
-            <div class="profile-header">
-                <div class="avatar">👤</div>
-                <h3 id="profile-name">Student Name</h3>
-                <p>Student</p>
+    <!-- --- CHECKOUT SCREEN --- -->
+    <div id="checkout-screen" class="screen">
+        <nav class="student-nav">
+            <div class="nav-brand">❤️ माँ का प्यार - Checkout</div>
+            <div class="nav-icons">
+                <button class="btn btn-small" onclick="backToCart()">← Back to Cart</button>
             </div>
-            <div class="profile-details">
-                <p><strong>📞 Mobile:</strong> <span id="profile-mobile">--</span></p>
-                <p><strong>📍 Address:</strong> <span id="profile-address">--</span></p>
-                <hr>
-                <button class="btn btn-secondary full-width" onclick="logout()">Logout</button>
+        </nav>
+
+        <div class="container">
+            <div class="checkout-layout">
+                <!-- LEFT: Forms -->
+                <div class="checkout-forms">
+                    <div class="checkout-card">
+                        <h3>📍 Delivery Address</h3>
+                        <input type="text" id="deliveryName" placeholder="Full Name" required>
+                        <input type="tel" id="deliveryPhone" placeholder="Phone Number" required>
+                        <textarea id="deliveryAddress" placeholder="Full Address (Street, City, Pincode)" rows="3" required></textarea>
+                    </div>
+
+                    <div class="checkout-card">
+                        <h3>💳 Payment Details</h3>
+                        <input type="text" id="cardNumber" placeholder="Card Number (e.g., 1234 5678 9012 3456)" required>
+                        <input type="text" id="cardExpiry" placeholder="Expiry (MM/YY)" required>
+                        <input type="text" id="cardCVV" placeholder="CVV" required>
+                        <input type="text" id="cardName" placeholder="Name on Card" required>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Order Summary -->
+                <div class="checkout-summary">
+                    <div class="checkout-card">
+                        <h3>📋 Order Summary</h3>
+                        <div id="checkoutItems" class="summary-items"></div>
+                        <hr>
+                        <div class="summary-line"><span>Subtotal:</span> ₹<span id="checkoutSubtotal">0</span></div>
+                        <div class="summary-line"><span>Delivery Fee:</span> ₹<span id="checkoutDelivery">50</span></div>
+                        <div class="summary-line"><span>Tax (5%):</span> ₹<span id="checkoutTax">0</span></div>
+                        <hr>
+                        <div class="summary-total"><strong>Total: ₹<span id="checkoutTotal">0</span></strong></div>
+                        <button class="btn btn-primary full-width" onclick="confirmPayment()">Pay Now</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- --- CUSTOMIZATION MODAL --- -->
+    <!-- --- MOTHER ORDER HISTORY SCREEN --- -->
+    <div id="mother-history-screen" class="screen">
+        <nav class="student-nav" style="border-bottom: 4px solid var(--warm-yellow);">
+            <div class="nav-brand">👩‍🍳 Order History</div>
+            <div class="nav-icons">
+                <button class="btn btn-small" onclick="showScreen('mother-dashboard')">← Back to Dashboard</button>
+                <button class="btn btn-small btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </nav>
+
+        <div class="container">
+            <h2 class="section-title">📜 All Orders</h2>
+            <div id="motherHistoryList" class="history-container">
+                <p class="empty-state">No orders yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- STUDENT ORDER HISTORY SCREEN --- -->
+    <div id="student-history-screen" class="screen">
+        <nav class="student-nav">
+            <div class="nav-brand">❤️ My Orders</div>
+            <div class="nav-icons">
+                <button class="btn btn-small" onclick="showScreen('student-dashboard')">← Back to Dashboard</button>
+                <button class="btn btn-small" onclick="logout()">Logout</button>
+            </div>
+        </nav>
+
+        <div class="container">
+            <h2 class="section-title">📜 Order History</h2>
+            <div id="studentHistoryList" class="history-container">
+                <p class="empty-state">No orders yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- MODAL --- -->
     <div id="customModal" class="modal">
         <div class="modal-content">
-            <h3>Customize Meal</h3>
+            <h3>Add to Plate</h3>
             <p id="modalFoodName" class="highlight-text">Food Name</p>
+            <p id="modalFoodPrice" style="color: #2E7D32; font-weight: bold; font-size: 1.1em; margin: 10px 0;">₹<span id="modalPrice">0</span></p>
             
-            <label>Preferences:</label>
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="opt-spicy"> Less Spicy 🌶️</label>
-                <label><input type="checkbox" id="opt-oil"> Less Oil 🛢️</label>
-                <label><input type="checkbox" id="opt-sugar"> Less Sugar 🍬</label>
+            <label class="small-label">Quantity</label>
+            <div class="quantity-selector">
+                <button class="qty-btn" onclick="decreaseQuantity()">−</button>
+                <input type="number" id="itemQuantity" value="1" min="1" max="10" readonly>
+                <button class="qty-btn" onclick="increaseQuantity()">+</button>
             </div>
             
-            <label>Add a Note:</label>
-            <input type="text" id="customNote" placeholder="e.g., No onions please">
-
+            <label class="small-label" style="margin-top: 15px;">Special Request (Optional)</label>
+            <input type="text" id="customNote" placeholder="Any special request?">
+            
+            <div class="modal-total">
+                <span>Total:</span>
+                <span id="modalTotal" style="color: #2E7D32; font-weight: bold; font-size: 1.2em;">₹0</span>
+            </div>
+            
             <div class="modal-actions">
                 <button class="btn btn-text" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="confirmAddToCart()">Add to Plate</button>
+                <button class="btn btn-primary" onclick="confirmAddToCart()">Add to Cart</button>
             </div>
         </div>
     </div>

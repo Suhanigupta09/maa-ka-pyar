@@ -1,306 +1,1103 @@
-// --- STATE MANAGEMENT ---
-let currentUser = { name: '', role: '', mobile: '', address: '' };
-let activeCategory = 'breakfast';
-let cart = [];
-let tempItem = null; // Item being customized
+// ===== STATE MANAGEMENT =====
+// Global state variables for managing application data
 
-// --- EXPANDED MOCK DATABASE (10+ Items per Category) ---
-// Using placeholder images that match the theme colors (Green #2E7D32 text on Light Green background #e8f5e9)
+// Current logged-in user
+let currentUser = { 
+    name: '', 
+    role: '',      // 'cook' or 'student'
+    mobile: '' 
+};
+
+// Current kitchen for logged-in cook
+let currentKitchen = null;
+
+// Active kitchen being viewed by student
+let activeKitchenId = null;
+
+// Currently selected meal category filter
+let activeCategory = 'breakfast';
+
+// Shopping cart for current student
+let cart = [];
+
+// Global orders database
+let ordersDB = [];
+
+// Temporary item holder for modal operations
+let tempItem = null;
+let tempQuantity = 1;
+
+// ===== MOCK DATA =====
+// Helper function for generating placeholder images
 const getImg = (text) => `https://placehold.co/400x300/e8f5e9/2e7d32?text=${encodeURIComponent(text)}`;
 
-let menuDB = [
-    // --- BREAKFAST ---
-    { id: 101, name: "Aloo Paratha & Curd", price: 60, category: "breakfast", image: getImg("Aloo Paratha") },
-    { id: 102, name: "Vegetable Poha", price: 40, category: "breakfast", image: getImg("Veg Poha") },
-    { id: 103, name: "Idli Sambar (4 pcs)", price: 50, category: "breakfast", image: getImg("Idli Sambar") },
-    { id: 104, name: "Masala Dosa", price: 70, category: "breakfast", image: getImg("Masala Dosa") },
-    { id: 105, name: "Rava Upma", price: 45, category: "breakfast", image: getImg("Upma") },
-    { id: 106, name: "Chole Bhature", price: 90, category: "breakfast", image: getImg("Chole Bhature") },
-    { id: 107, name: "Paneer Paratha", price: 80, category: "breakfast", image: getImg("Paneer Paratha") },
-    { id: 108, name: "Egg Bhurji & Pav", price: 65, category: "breakfast", image: getImg("Egg Bhurji") },
-    { id: 109, name: "Bombay Sandwich", price: 50, category: "breakfast", image: getImg("Sandwich") },
-    { id: 110, name: "Puri Bhaji", price: 55, category: "breakfast", image: getImg("Puri Bhaji") },
+// Order tracking statuses
+const ORDER_STATUSES = {
+    PENDING: 'Pending',
+    ACCEPTED: 'Accepted',
+    PREPARING: 'Preparing',
+    OUT_FOR_DELIVERY: 'Out for Delivery',
+    DELIVERED: 'Delivered',
+    DECLINED: 'Declined',
+    REFUND_REQUESTED: 'Refund Requested',
+    REFUNDED: 'Refunded',
+    CANCELLED: 'Cancelled'
+};
 
-    // --- LUNCH ---
-    { id: 201, name: "Special Veg Thali", price: 120, category: "lunch", image: getImg("Veg Thali") },
-    { id: 202, name: "Rajma Chawal Bowl", price: 90, category: "lunch", image: getImg("Rajma Chawal") },
-    { id: 203, name: "Kadhi Pakora & Rice", price: 85, category: "lunch", image: getImg("Kadhi Chawal") },
-    { id: 204, name: "Dal Makhani Combo", price: 110, category: "lunch", image: getImg("Dal Makhani") },
-    { id: 205, name: "Paneer Butter Masala", price: 140, category: "lunch", image: getImg("Paneer Masala") },
-    { id: 206, name: "Egg Curry & Rice", price: 100, category: "lunch", image: getImg("Egg Curry") },
-    { id: 207, name: "Home Style Chicken", price: 160, category: "lunch", image: getImg("Chicken Curry") },
-    { id: 208, name: "Jeera Rice & Dal Fry", price: 80, category: "lunch", image: getImg("Dal Fry") },
-    { id: 209, name: "Bhindi Masala & Roti", price: 75, category: "lunch", image: getImg("Bhindi Masala") },
-    { id: 210, name: "Mini Thali (Dal/Sabzi)", price: 70, category: "lunch", image: getImg("Mini Thali") },
-
-    // --- SNACKS ---
-    { id: 301, name: "Masala Chai & Bun", price: 30, category: "snack", image: getImg("Chai Bun") },
-    { id: 302, name: "Samosa (2 pcs)", price: 25, category: "snack", image: getImg("Samosa") },
-    { id: 303, name: "Mix Pakora Plate", price: 40, category: "snack", image: getImg("Pakora") },
-    { id: 304, name: "Vada Pav", price: 20, category: "snack", image: getImg("Vada Pav") },
-    { id: 305, name: "Bhel Puri", price: 35, category: "snack", image: getImg("Bhel Puri") },
-    { id: 306, name: "Pani Puri (6 pcs)", price: 30, category: "snack", image: getImg("Pani Puri") },
-    { id: 307, name: "Veg Grilled Sandwich", price: 60, category: "snack", image: getImg("Grill Sandwich") },
-    { id: 308, name: "Vegetable Maggi", price: 40, category: "snack", image: getImg("Veg Maggi") },
-    { id: 309, name: "Bread Pakora", price: 25, category: "snack", image: getImg("Bread Pakora") },
-    { id: 310, name: "Veg Cutlet", price: 35, category: "snack", image: getImg("Veg Cutlet") },
-
-    // --- DINNER ---
-    { id: 401, name: "Dal Khichdi", price: 80, category: "dinner", image: getImg("Dal Khichdi") },
-    { id: 402, name: "Roti Sabzi Combo", price: 70, category: "dinner", image: getImg("Roti Sabzi") },
-    { id: 403, name: "Veg Fried Rice", price: 90, category: "dinner", image: getImg("Fried Rice") },
-    { id: 404, name: "Veg Biryani", price: 110, category: "dinner", image: getImg("Veg Biryani") },
-    { id: 405, name: "Palak Paneer & Roti", price: 130, category: "dinner", image: getImg("Palak Paneer") },
-    { id: 406, name: "Malai Kofta", price: 140, category: "dinner", image: getImg("Malai Kofta") },
-    { id: 407, name: "Sev Tamatar & Paratha", price: 90, category: "dinner", image: getImg("Sev Tamatar") },
-    { id: 408, name: "Soup & Salad", price: 85, category: "dinner", image: getImg("Soup Salad") },
-    { id: 409, name: "Hakka Noodles", price: 95, category: "dinner", image: getImg("Noodles") },
-    { id: 410, name: "Aloo Gobhi & Roti", price: 75, category: "dinner", image: getImg("Aloo Gobhi") },
+// Pre-populated kitchens database
+let kitchens = [
+    { 
+        id: 1, 
+        name: "Suman's Kitchen", 
+        ownerName: "Suman", 
+        specialty: "North Indian", 
+        rating: 4.8, 
+        image: "https://placehold.co/400x200/e8f5e9/2e7d32?text=Suman",
+        isOpen: true,
+        autoTiming: true,
+        openingTime: "09:00",
+        closingTime: "21:00"
+    },
+    { 
+        id: 2, 
+        name: "Radha's Rasoi", 
+        ownerName: "Radha", 
+        specialty: "Gujarati", 
+        rating: 4.5, 
+        image: "https://placehold.co/400x200/fff8e1/5d4037?text=Radha",
+        isOpen: true,
+        autoTiming: true,
+        openingTime: "09:00",
+        closingTime: "21:00"
+    },
+    { 
+        id: 3, 
+        name: "Priya's Home Kitchen", 
+        ownerName: "Priya", 
+        specialty: "South Indian", 
+        rating: 4.9, 
+        image: "https://placehold.co/400x200/e1f5fe/01579b?text=Priya",
+        isOpen: true,
+        autoTiming: true,
+        openingTime: "09:00",
+        closingTime: "21:00"
+    }
 ];
 
-// --- 1. NAVIGATION & AUTH ---
-
-function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+// Pre-populated menu items database
+let menuDB = [
+    // Suman's Kitchen items
+    { 
+        id: 101, 
+        kitchenId: 1, 
+        name: "Aloo Paratha", 
+        price: 60, 
+        category: "breakfast", 
+        image: getImg("Aloo Paratha") 
+    },
+    { 
+        id: 102, 
+        kitchenId: 1, 
+        name: "Dal Makhani", 
+        price: 120, 
+        category: "lunch", 
+        image: getImg("Dal Makhani") 
+    },
+    { 
+        id: 103, 
+        kitchenId: 1, 
+        name: "Samosa", 
+        price: 30, 
+        category: "snack", 
+        image: getImg("Samosa") 
+    },
+    { 
+        id: 104, 
+        kitchenId: 1, 
+        name: "Paneer Butter Masala", 
+        price: 150, 
+        category: "dinner", 
+        image: getImg("Paneer Masala") 
+    },
     
-    // Logic to handle IDs ending with '-screen'
-    const targetId = screenId.endsWith('-screen') ? screenId : screenId + '-screen';
-    const target = document.getElementById(targetId);
+    // Radha's Rasoi items
+    { 
+        id: 201, 
+        kitchenId: 2, 
+        name: "Poha", 
+        price: 40, 
+        category: "breakfast", 
+        image: getImg("Poha") 
+    },
+    { 
+        id: 202, 
+        kitchenId: 2, 
+        name: "Gujarati Thali", 
+        price: 180, 
+        category: "lunch", 
+        image: getImg("Thali") 
+    },
+    { 
+        id: 203, 
+        kitchenId: 2, 
+        name: "Dhokla", 
+        price: 50, 
+        category: "snack", 
+        image: getImg("Dhokla") 
+    },
+    { 
+        id: 204, 
+        kitchenId: 2, 
+        name: "Undhiyu", 
+        price: 140, 
+        category: "dinner", 
+        image: getImg("Undhiyu") 
+    },
     
-    if (target) {
-        target.classList.add('active');
-    } else {
-        console.error("Screen not found:", targetId);
+    // Priya's Home Kitchen items
+    { 
+        id: 301, 
+        kitchenId: 3, 
+        name: "Idli Sambar", 
+        price: 50, 
+        category: "breakfast", 
+        image: getImg("Idli") 
+    },
+    { 
+        id: 302, 
+        kitchenId: 3, 
+        name: "Curd Rice", 
+        price: 80, 
+        category: "lunch", 
+        image: getImg("Curd Rice") 
+    },
+    { 
+        id: 303, 
+        kitchenId: 3, 
+        name: "Vada", 
+        price: 35, 
+        category: "snack", 
+        image: getImg("Vada") 
+    },
+    { 
+        id: 304, 
+        kitchenId: 3, 
+        name: "Dosa", 
+        price: 70, 
+        category: "dinner", 
+        image: getImg("Dosa") 
     }
+];
+
+// --- NAVIGATION & AUTH ---
+
+function showScreen(id) {
+    // Helper to switch screens
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    // Handle both "id" and "id-screen" inputs
+    const targetId = id.endsWith('-screen') ? id : id + '-screen';
+    const el = document.getElementById(targetId);
+    if(el) {
+        el.classList.add('active');
+        
+        // Load history when navigating to history screens
+        if (id === 'mother-history') {
+            loadMotherOrderHistory();
+        } else if (id === 'student-history') {
+            loadStudentOrderHistory();
+        }
+    }
+    else console.error("Screen not found:", targetId);
 }
 
 function goToLogin(role) {
-    currentUser.role = role;
-    const title = document.getElementById('auth-title');
-    title.textContent = role === 'cook' ? "👩‍🍳 Register as Mother" : "🧑‍💻 Register as Student";
+    currentUser.role = role; // Set role (cook/student)
+    document.getElementById('auth-title').innerText = role === 'cook' ? "👩‍🍳 Mother Login" : "🧑‍💻 Student Login";
     showScreen('auth');
 }
 
-function handleLogin(event) {
-    event.preventDefault();
-    currentUser.name = document.getElementById('u_name').value;
-    currentUser.mobile = document.getElementById('u_mobile').value;
-    currentUser.address = document.getElementById('u_address').value;
+function handleLogin(e) {
+    e.preventDefault();
+    try {
+        const name = document.getElementById('u_name').value;
+        const mobile = document.getElementById('u_mobile').value;
+        
+        currentUser.name = name;
+        currentUser.mobile = mobile;
 
-    // Populate Profile
-    document.getElementById('profile-name').textContent = currentUser.name;
-    document.getElementById('profile-mobile').textContent = currentUser.mobile;
-    document.getElementById('profile-address').textContent = currentUser.address;
+        if (currentUser.role === 'cook') {
+            // 1. Find or Create Kitchen
+            let k = kitchens.find(k => k.ownerName.toLowerCase() === name.toLowerCase());
+            
+            if (!k) {
+                // New Mother -> Create Kitchen
+                k = { 
+                    id: Date.now(), 
+                    name: `${name}'s Kitchen`, 
+                    ownerName: name, 
+                    specialty: "Home Food", 
+                    rating: 5.0, 
+                    image: getImg(name) 
+                };
+                kitchens.push(k);
+            }
+            currentKitchen = k;
+            
+            // 2. Populate Dashboard
+            const nameDisplay = document.getElementById('mom-name-display');
+            if(nameDisplay) nameDisplay.innerText = name;
 
-    if (currentUser.role === 'cook') {
-        showScreen('mother-dashboard');
-    } else {
-        showScreen('student-dashboard');
-        renderStudentMenu();
+            document.getElementById('kitchenNameInput').value = k.name;
+            document.getElementById('kitchenSpecInput').value = k.specialty;
+            
+            // 3. Load Data
+            loadMotherMenuTable();
+            loadMotherOrders();
+            loadKitchenTimingSettings();
+            
+            showScreen('mother-dashboard');
+        } else {
+            // Student Login
+            showScreen('student-dashboard');
+            renderKitchensList();
+            updateNotificationBadge();
+        }
+    } catch (err) {
+        console.error("Login Error:", err);
+        alert("Something went wrong during login. Please try again.");
     }
 }
 
 function logout() {
-    currentUser = {};
+    currentUser = { name: '', role: '', mobile: '' };
+    currentKitchen = null;
     cart = [];
     showScreen('role');
+    document.getElementById('detailsForm').reset();
 }
 
-// --- 2. STUDENT DASHBOARD LOGIC ---
+// --- MOTHER DASHBOARD LOGIC ---
 
-function filterMenu(category) {
-    activeCategory = category;
-    
-    // UI Update
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    // Simple way to highlight active tab based on text
-    const buttons = document.querySelectorAll('.tab-btn');
-    buttons.forEach(btn => {
-        if(btn.innerText.toLowerCase().includes(category)) {
-            btn.classList.add('active');
-        }
-    });
+function loadMotherOrders() {
+    const list = document.getElementById('motherOrderList');
+    list.innerHTML = '';
 
-    document.getElementById('menuTitle').innerText = category.charAt(0).toUpperCase() + category.slice(1) + " Menu";
-    renderStudentMenu();
-}
+    // Find active orders for this kitchen (not delivered, refunded, or cancelled)
+    const myOrders = ordersDB.filter(o => 
+        o.kitchenId === currentKitchen.id && 
+        ![ORDER_STATUSES.DELIVERED, ORDER_STATUSES.REFUNDED, ORDER_STATUSES.CANCELLED].includes(o.status)
+    );
 
-function searchMenu() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
-    
-    if (query === '') {
-        renderStudentMenu();
+    if (myOrders.length === 0) {
+        list.innerHTML = '<p class="empty-state">No active orders right now.</p>';
         return;
     }
 
-    const filtered = menuDB.filter(item => item.name.toLowerCase().includes(query));
-    document.getElementById('menuTitle').innerText = `Search Results for "${query}"`;
-    renderItems(filtered);
+    myOrders.forEach(order => {
+        const div = document.createElement('div');
+        div.className = `order-card ${order.status.toLowerCase().replace(/ /g, '-')}`;
+        
+        let actionButtons = '';
+        if (order.status === ORDER_STATUSES.PENDING) {
+            actionButtons = `
+                <button class="btn-action accept" onclick="updateOrderStatus(${order.id}, '${ORDER_STATUSES.ACCEPTED}')">Accept ✅</button>
+                <button class="btn-action decline" onclick="updateOrderStatus(${order.id}, '${ORDER_STATUSES.DECLINED}')">Decline ❌</button>
+            `;
+        } else if (order.status === ORDER_STATUSES.ACCEPTED) {
+            actionButtons = `
+                <span class="status-badge ${order.status}">${order.status}</span>
+                <button class="btn-action accept" onclick="updateOrderStatus(${order.id}, '${ORDER_STATUSES.PREPARING}')">Start Preparing 👨‍🍳</button>
+            `;
+        } else if (order.status === ORDER_STATUSES.PREPARING) {
+            actionButtons = `
+                <span class="status-badge ${order.status.replace(/ /g, '-')}">${order.status}</span>
+                <button class="btn-action accept" onclick="updateOrderStatus(${order.id}, '${ORDER_STATUSES.OUT_FOR_DELIVERY}')">Out for Delivery 🚚</button>
+            `;
+        } else if (order.status === ORDER_STATUSES.OUT_FOR_DELIVERY) {
+            actionButtons = `
+                <span class="status-badge ${order.status.replace(/ /g, '-')}">${order.status}</span>
+                <button class="btn-action accept" onclick="updateOrderStatus(${order.id}, '${ORDER_STATUSES.DELIVERED}')">Mark Delivered ✅</button>
+            `;
+        } else if (order.status === ORDER_STATUSES.REFUND_REQUESTED) {
+            actionButtons = `
+                <span class="status-badge ${order.status.replace(/ /g, '-')}">${order.status}</span>
+                <button class="btn-action accept" onclick="processRefund(${order.id}, true)">Approve Refund ✅</button>
+                <button class="btn-action decline" onclick="processRefund(${order.id}, false)">Decline Refund ❌</button>
+                <div style="margin-top: 5px; font-size: 0.85em; color: #d32f2f;"><strong>Reason:</strong> ${order.refundReason || 'Not specified'}</div>
+            `;
+        } else {
+            actionButtons = `<span class="status-badge ${order.status.replace(/ /g, '-')}">${order.status}</span>`;
+        }
+        
+        div.innerHTML = `
+            <div class="order-header">
+                <strong>From: ${order.studentName}</strong>
+                <span class="order-total">₹${order.total}</span>
+            </div>
+            <div class="order-items">
+                ${order.items.map(i => `${i.name} x1`).join(', ')}
+            </div>
+            ${order.note ? `<div class="order-note">"${order.note}"</div>` : ''}
+            
+            <div class="order-actions">
+                ${actionButtons}
+            </div>
+        `;
+        list.appendChild(div);
+    });
 }
 
-function renderStudentMenu() {
-    const filtered = menuDB.filter(item => item.category === activeCategory);
-    renderItems(filtered);
+function updateOrderStatus(orderId, status) {
+    const order = ordersDB.find(o => o.id === orderId);
+    if (order) {
+        const oldStatus = order.status;
+        order.status = status;
+        order.updatedAt = new Date().toLocaleString();
+        
+        // Add to tracking history
+        if (!order.trackingHistory) {
+            order.trackingHistory = [];
+        }
+        order.trackingHistory.push({
+            status: status,
+            timestamp: new Date().toLocaleString(),
+            message: getStatusMessage(status)
+        });
+        
+        loadMotherOrders(); // Refresh UI
+        
+        // Show notification to student
+        if (status === ORDER_STATUSES.ACCEPTED) {
+            alert(`Order #${orderId} has been accepted by the cook! 🎉`);
+        } else if (status === ORDER_STATUSES.DECLINED) {
+            alert(`Order #${orderId} has been declined by the cook. 😔`);
+        } else if (status === ORDER_STATUSES.PREPARING) {
+            alert(`Order #${orderId} is being prepared! 👨‍🍳`);
+        } else if (status === ORDER_STATUSES.OUT_FOR_DELIVERY) {
+            alert(`Order #${orderId} is out for delivery! 🚚`);
+        } else if (status === ORDER_STATUSES.DELIVERED) {
+            alert(`Order #${orderId} has been delivered! Enjoy your meal! 🎉`);
+        }
+    }
 }
 
-function renderItems(items) {
-    const container = document.getElementById('studentMenuList');
-    container.innerHTML = '';
+function getStatusMessage(status) {
+    const messages = {
+        [ORDER_STATUSES.PENDING]: 'Order placed and waiting for confirmation',
+        [ORDER_STATUSES.ACCEPTED]: 'Order accepted by the cook',
+        [ORDER_STATUSES.PREPARING]: 'Your food is being prepared',
+        [ORDER_STATUSES.OUT_FOR_DELIVERY]: 'Order is on the way',
+        [ORDER_STATUSES.DELIVERED]: 'Order delivered successfully',
+        [ORDER_STATUSES.DECLINED]: 'Order declined by the cook',
+        [ORDER_STATUSES.REFUND_REQUESTED]: 'Refund requested by customer',
+        [ORDER_STATUSES.REFUNDED]: 'Refund processed successfully',
+        [ORDER_STATUSES.CANCELLED]: 'Order cancelled'
+    };
+    return messages[status] || status;
+}
 
-    if (items.length === 0) {
-        container.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>No delicious food found here yet.</p>";
+function requestRefund(orderId, reason) {
+    const order = ordersDB.find(o => o.id === orderId);
+    if (order) {
+        if (order.status === ORDER_STATUSES.DELIVERED || order.status === ORDER_STATUSES.ACCEPTED) {
+            order.refundReason = reason;
+            updateOrderStatus(orderId, ORDER_STATUSES.REFUND_REQUESTED);
+            alert('Refund request submitted successfully. The cook will review it shortly.');
+            loadStudentOrderHistory();
+        } else {
+            alert('Refund can only be requested for delivered or accepted orders.');
+        }
+    }
+}
+
+function processRefund(orderId, approve) {
+    const order = ordersDB.find(o => o.id === orderId);
+    if (order && order.status === ORDER_STATUSES.REFUND_REQUESTED) {
+        if (approve) {
+            updateOrderStatus(orderId, ORDER_STATUSES.REFUNDED);
+            alert(`Refund approved for Order #${orderId}. Amount ₹${order.total} will be refunded.`);
+        } else {
+            updateOrderStatus(orderId, order.trackingHistory[order.trackingHistory.length - 2]?.status || ORDER_STATUSES.DELIVERED);
+            alert(`Refund declined for Order #${orderId}.`);
+        }
+        loadMotherOrderHistory();
+    }
+}
+
+function cancelOrder(orderId) {
+    const order = ordersDB.find(o => o.id === orderId);
+    if (order && order.status === ORDER_STATUSES.PENDING) {
+        updateOrderStatus(orderId, ORDER_STATUSES.CANCELLED);
+        alert('Order cancelled successfully.');
+        loadStudentOrderHistory();
+    } else {
+        alert('Only pending orders can be cancelled.');
+    }
+}
+
+function viewOrderTracking(orderId) {
+    const order = ordersDB.find(o => o.id === orderId);
+    if (!order) {
+        alert('Order not found!');
+        return;
+    }
+    
+    let trackingHTML = `
+        <div style="max-width: 500px; margin: 20px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+            <h2 style="color: #2E7D32; margin-bottom: 20px;">📦 Order Tracking #${orderId}</h2>
+            <div style="margin-bottom: 15px;">
+                <strong>Current Status:</strong> <span style="color: #2E7D32; font-size: 1.2em;">${order.status}</span>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <strong>Total Amount:</strong> ₹${order.total}
+            </div>
+            <hr style="margin: 20px 0;">
+            <h3 style="color: #5D4037; margin-bottom: 15px;">Tracking History:</h3>
+    `;
+    
+    if (order.trackingHistory && order.trackingHistory.length > 0) {
+        order.trackingHistory.forEach((track, index) => {
+            const isLatest = index === order.trackingHistory.length - 1;
+            trackingHTML += `
+                <div style="padding: 12px; margin-bottom: 10px; background: ${isLatest ? '#e8f5e9' : '#f5f5f5'}; border-left: 4px solid ${isLatest ? '#4CAF50' : '#ddd'}; border-radius: 5px;">
+                    <div style="font-weight: bold; color: #2E7D32;">${track.status}</div>
+                    <div style="font-size: 0.9em; color: #757575;">${track.message}</div>
+                    <div style="font-size: 0.85em; color: #999; margin-top: 5px;">${track.timestamp}</div>
+                </div>
+            `;
+        });
+    } else {
+        trackingHTML += `<p style="color: #757575; font-style: italic;">No tracking history available yet.</p>`;
+    }
+    
+    trackingHTML += `
+            <button onclick="closeTrackingModal()" style="margin-top: 20px; padding: 10px 20px; background: #2E7D32; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">Close</button>
+        </div>
+    `;
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'trackingModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; overflow-y: auto;';
+    modal.innerHTML = trackingHTML;
+    document.body.appendChild(modal);
+}
+
+function closeTrackingModal() {
+    const modal = document.getElementById('trackingModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+let uploadedImageData = null;
+
+function previewImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            uploadedImageData = e.target.result;
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function addMyMenuItem() {
+    const name = document.getElementById('newItemName').value;
+    const price = document.getElementById('newItemPrice').value;
+    const cat = document.getElementById('newItemCategory').value;
+
+    if (name && price) {
+        menuDB.push({
+            id: Date.now(),
+            kitchenId: currentKitchen.id,
+            name: name,
+            price: parseInt(price),
+            category: cat,
+            image: uploadedImageData || getImg(name)
+        });
+        loadMotherMenuTable();
+        // Clear inputs
+        document.getElementById('newItemName').value = '';
+        document.getElementById('newItemPrice').value = '';
+        document.getElementById('newItemImage').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
+        uploadedImageData = null;
+        
+        showToast(`${name} added to menu successfully!`);
+    } else {
+        alert('Please enter item name and price');
+    }
+}
+
+function loadMotherMenuTable() {
+    const list = document.getElementById('myMenuList');
+    list.innerHTML = '';
+    const items = menuDB.filter(i => i.kitchenId === currentKitchen.id);
+    
+    if(items.length === 0) {
+        list.innerHTML = '<li class="empty-state">No items added yet.</li>';
         return;
     }
 
     items.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${item.name}</span> <span>₹${item.price}</span>`;
+        list.appendChild(li);
+    });
+}
+
+function saveKitchenProfile() {
+    currentKitchen.name = document.getElementById('kitchenNameInput').value;
+    currentKitchen.specialty = document.getElementById('kitchenSpecInput').value;
+    alert("Profile Updated Successfully!");
+}
+
+// --- KITCHEN TIMING MANAGEMENT ---
+
+function toggleTimingMode() {
+    const autoCheckbox = document.getElementById('autoTimingCheckbox');
+    const manualSection = document.getElementById('manualTimingSection');
+    
+    if (autoCheckbox.checked) {
+        manualSection.style.display = 'none';
+        currentKitchen.autoTiming = true;
+        currentKitchen.openingTime = "09:00";
+        currentKitchen.closingTime = "21:00";
+        checkAutoTiming();
+    } else {
+        manualSection.style.display = 'block';
+        currentKitchen.autoTiming = false;
+    }
+}
+
+function toggleKitchenStatus() {
+    const checkbox = document.getElementById('kitchenOpenCheckbox');
+    currentKitchen.isOpen = checkbox.checked;
+    updateKitchenStatusDisplay();
+}
+
+function saveKitchenTiming() {
+    if (!currentKitchen.autoTiming) {
+        currentKitchen.openingTime = document.getElementById('openingTime').value;
+        currentKitchen.closingTime = document.getElementById('closingTime').value;
+    }
+    alert("Timing settings saved successfully!");
+    updateKitchenStatusDisplay();
+}
+
+function updateKitchenStatusDisplay() {
+    const statusDiv = document.getElementById('kitchenStatusDisplay');
+    const statusText = document.getElementById('statusText');
+    
+    if (currentKitchen.isOpen) {
+        statusDiv.style.backgroundColor = '#C8E6C9';
+        statusDiv.style.color = '#2E7D32';
+        statusText.innerText = `Open (${currentKitchen.openingTime} - ${currentKitchen.closingTime})`;
+    } else {
+        statusDiv.style.backgroundColor = '#FFCDD2';
+        statusDiv.style.color = '#d32f2f';
+        statusText.innerText = 'Closed';
+    }
+}
+
+function checkAutoTiming() {
+    if (!currentKitchen || !currentKitchen.autoTiming) return;
+    
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    // Auto timing: 9 AM to 9 PM
+    if (currentHour >= 9 && currentHour < 21) {
+        currentKitchen.isOpen = true;
+    } else {
+        currentKitchen.isOpen = false;
+    }
+    
+    const checkbox = document.getElementById('kitchenOpenCheckbox');
+    if (checkbox) {
+        checkbox.checked = currentKitchen.isOpen;
+        updateKitchenStatusDisplay();
+    }
+}
+
+function loadKitchenTimingSettings() {
+    if (!currentKitchen) return;
+    
+    // Set default values if not present
+    if (currentKitchen.autoTiming === undefined) currentKitchen.autoTiming = true;
+    if (currentKitchen.isOpen === undefined) currentKitchen.isOpen = true;
+    if (!currentKitchen.openingTime) currentKitchen.openingTime = "09:00";
+    if (!currentKitchen.closingTime) currentKitchen.closingTime = "21:00";
+    
+    // Load values into form
+    document.getElementById('autoTimingCheckbox').checked = currentKitchen.autoTiming;
+    document.getElementById('openingTime').value = currentKitchen.openingTime;
+    document.getElementById('closingTime').value = currentKitchen.closingTime;
+    document.getElementById('kitchenOpenCheckbox').checked = currentKitchen.isOpen;
+    
+    // Show/hide manual timing section
+    const manualSection = document.getElementById('manualTimingSection');
+    manualSection.style.display = currentKitchen.autoTiming ? 'none' : 'block';
+    
+    // Check auto timing if enabled
+    if (currentKitchen.autoTiming) {
+        checkAutoTiming();
+    }
+    
+    updateKitchenStatusDisplay();
+}
+
+// --- ORDER HISTORY ---
+
+function loadMotherOrderHistory() {
+    const list = document.getElementById('motherHistoryList');
+    list.innerHTML = '';
+
+    const myOrders = ordersDB.filter(o => o.kitchenId === currentKitchen.id);
+
+    if (myOrders.length === 0) {
+        list.innerHTML = '<p class="empty-state">No orders in history.</p>';
+        return;
+    }
+
+    // Sort by most recent first
+    myOrders.sort((a, b) => b.id - a.id);
+
+    myOrders.forEach(order => {
+        const div = document.createElement('div');
+        div.className = `order-card ${order.status.toLowerCase().replace(/ /g, '-')}`;
+        
+        let actionButtons = '';
+        if (order.status === ORDER_STATUSES.ACCEPTED) {
+            actionButtons = `
+                <button class="btn-action accept" onclick="updateOrderStatus(${order.id}, '${ORDER_STATUSES.PREPARING}')">Start Preparing 👨‍🍳</button>
+            `;
+        } else if (order.status === ORDER_STATUSES.PREPARING) {
+            actionButtons = `
+                <button class="btn-action accept" onclick="updateOrderStatus(${order.id}, '${ORDER_STATUSES.OUT_FOR_DELIVERY}')">Out for Delivery 🚚</button>
+            `;
+        } else if (order.status === ORDER_STATUSES.OUT_FOR_DELIVERY) {
+            actionButtons = `
+                <button class="btn-action accept" onclick="updateOrderStatus(${order.id}, '${ORDER_STATUSES.DELIVERED}')">Mark Delivered ✅</button>
+            `;
+        } else if (order.status === ORDER_STATUSES.REFUND_REQUESTED) {
+            actionButtons = `
+                <button class="btn-action accept" onclick="processRefund(${order.id}, true)">Approve Refund ✅</button>
+                <button class="btn-action decline" onclick="processRefund(${order.id}, false)">Decline Refund ❌</button>
+                <div style="margin-top: 5px; font-size: 0.85em; color: #d32f2f;"><strong>Reason:</strong> ${order.refundReason || 'Not specified'}</div>
+            `;
+        }
+        
+        div.innerHTML = `
+            <div class="order-header">
+                <strong>Order #${order.id}</strong>
+                <span class="order-total">₹${order.total}</span>
+            </div>
+            <div class="order-items">
+                <strong>From:</strong> ${order.studentName}<br>
+                <strong>Items:</strong> ${order.items.map(i => i.name).join(', ')}<br>
+                ${order.note ? `<strong>Note:</strong> "${order.note}"<br>` : ''}
+                ${order.updatedAt ? `<strong>Updated:</strong> ${order.updatedAt}<br>` : ''}
+                <strong>Delivery:</strong> ${order.deliveryAddress.address}
+            </div>
+            <div class="order-actions">
+                <span class="status-badge ${order.status.replace(/ /g, '-')}">${order.status}</span>
+                ${actionButtons}
+            </div>
+        `;
+        list.appendChild(div);
+    });
+}
+
+function loadStudentOrderHistory() {
+    const list = document.getElementById('studentHistoryList');
+    list.innerHTML = '';
+
+    const myOrders = ordersDB.filter(o => o.studentName === currentUser.name);
+
+    if (myOrders.length === 0) {
+        list.innerHTML = '<p class="empty-state">No orders in history.</p>';
+        return;
+    }
+
+    // Sort by most recent first
+    myOrders.sort((a, b) => b.id - a.id);
+
+    myOrders.forEach(order => {
+        const kitchen = kitchens.find(k => k.id === order.kitchenId);
+        const div = document.createElement('div');
+        div.className = `order-card ${order.status.toLowerCase().replace(/ /g, '-')}`;
+        
+        let actionButtons = `
+            <button class="btn-action" style="background: #2196F3;" onclick="viewOrderTracking(${order.id})">Track Order 📦</button>
+        `;
+        
+        if (order.status === ORDER_STATUSES.PENDING) {
+            actionButtons += `
+                <button class="btn-action decline" onclick="cancelOrder(${order.id})">Cancel Order ❌</button>
+            `;
+        } else if (order.status === ORDER_STATUSES.DELIVERED || order.status === ORDER_STATUSES.ACCEPTED) {
+            if (order.status !== ORDER_STATUSES.REFUND_REQUESTED && order.status !== ORDER_STATUSES.REFUNDED) {
+                actionButtons += `
+                    <button class="btn-action" style="background: #FF9800;" onclick="promptRefund(${order.id})">Request Refund 💰</button>
+                `;
+            }
+        }
+        
+        div.innerHTML = `
+            <div class="order-header">
+                <strong>Order #${order.id}</strong>
+                <span class="order-total">₹${order.total}</span>
+            </div>
+            <div class="order-items">
+                <strong>Kitchen:</strong> ${kitchen ? kitchen.name : 'Unknown'}<br>
+                <strong>Items:</strong> ${order.items.map(i => i.name).join(', ')}<br>
+                ${order.note ? `<strong>Note:</strong> "${order.note}"<br>` : ''}
+                ${order.updatedAt ? `<strong>Updated:</strong> ${order.updatedAt}<br>` : ''}
+                <strong>Delivery:</strong> ${order.deliveryAddress.address}
+            </div>
+            <div class="order-actions">
+                <span class="status-badge ${order.status.replace(/ /g, '-')}">${order.status}</span>
+                <div style="margin-top: 10px;">
+                    ${actionButtons}
+                </div>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+}
+
+function promptRefund(orderId) {
+    const reason = prompt('Please enter the reason for refund request:');
+    if (reason && reason.trim()) {
+        requestRefund(orderId, reason.trim());
+    } else if (reason !== null) {
+        alert('Please provide a reason for the refund request.');
+    }
+}
+
+function updateNotificationBadge() {
+    const myOrders = ordersDB.filter(o => o.studentName === currentUser.name && o.status !== 'Pending');
+    const badge = document.getElementById('notif-badge');
+    if (badge) {
+        badge.innerText = myOrders.length;
+        badge.style.display = myOrders.length > 0 ? 'inline' : 'none';
+    }
+}
+
+// --- STUDENT DASHBOARD LOGIC ---
+
+function renderKitchensList() {
+    document.getElementById('kitchens-list-view').classList.remove('hidden');
+    document.getElementById('single-kitchen-view').classList.add('hidden');
+    
+    const grid = document.getElementById('kitchensGrid');
+    grid.innerHTML = '';
+    
+    kitchens.forEach(k => {
+        const div = document.createElement('div');
+        div.className = 'kitchen-card';
+        div.onclick = () => openKitchen(k.id);
+        
+        const statusBadge = k.isOpen 
+            ? '<span style="color: #4CAF50; font-weight: bold;">● Open</span>' 
+            : '<span style="color: #d32f2f; font-weight: bold;">● Closed</span>';
+        
+        div.innerHTML = `
+            <div class="kitchen-img-box"><img src="${k.image}"></div>
+            <div class="kitchen-info">
+                <h3>${k.name}</h3>
+                <p>${k.specialty}</p>
+                <p style="font-size: 0.85rem;">${statusBadge} ${k.openingTime} - ${k.closingTime}</p>
+            </div>
+        `;
+        grid.appendChild(div);
+    });
+}
+
+function openKitchen(id) {
+    activeKitchenId = id;
+    const k = kitchens.find(x => x.id === id);
+    document.getElementById('activeKitchenName').innerText = k.name;
+    document.getElementById('kitchens-list-view').classList.add('hidden');
+    document.getElementById('single-kitchen-view').classList.remove('hidden');
+    filterMenu('breakfast');
+}
+
+function backToKitchens() {
+    document.getElementById('kitchens-list-view').classList.remove('hidden');
+    document.getElementById('single-kitchen-view').classList.add('hidden');
+    activeKitchenId = null;
+}
+
+function filterMenu(cat) {
+    activeCategory = cat;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if(event) event.target.classList.add('active');
+    
+    const container = document.getElementById('studentMenuList');
+    container.innerHTML = '';
+    const items = menuDB.filter(i => i.kitchenId === activeKitchenId && i.category === activeCategory);
+    
+    if(items.length === 0) {
+        container.innerHTML = '<p class="empty-state">No items listed for this time.</p>';
+        return;
+    }
+    
+    items.forEach(i => {
         const div = document.createElement('div');
         div.className = 'food-card';
-        // ADDED IMAGE TAG HERE
         div.innerHTML = `
-            <div class="food-img-container">
-                <img src="${item.image}" alt="${item.name}" loading="lazy">
-            </div>
+            <div class="food-img-container"><img src="${i.image}"></div>
             <div class="food-details">
-                <h4>${item.name}</h4>
-                <span class="price">₹${item.price}</span>
-                <button class="btn btn-primary btn-small full-width" onclick="openCustomModal(${item.id})">Add to Plate</button>
+                <h4>${i.name}</h4>
+                <span class="price">₹${i.price}</span>
+                <button class="btn btn-primary btn-small full-width" onclick="openModal(${i.id})">Add</button>
             </div>
         `;
         container.appendChild(div);
     });
 }
 
-// --- 3. CUSTOMIZATION & CART (Same as before) ---
+// --- CART & ORDERING ---
 
-function openCustomModal(itemId) {
-    tempItem = menuDB.find(i => i.id === itemId);
+function openModal(id) {
+    tempItem = menuDB.find(i => i.id === id);
+    tempQuantity = 1;
     document.getElementById('modalFoodName').innerText = tempItem.name;
-    document.querySelectorAll('#customModal input[type=checkbox]').forEach(c => c.checked = false);
+    document.getElementById('modalPrice').innerText = tempItem.price;
+    document.getElementById('itemQuantity').value = 1;
     document.getElementById('customNote').value = '';
+    updateModalTotal();
     document.getElementById('customModal').style.display = 'flex';
 }
 
-function closeModal() {
+function closeModal() { 
     document.getElementById('customModal').style.display = 'none';
+    tempQuantity = 1;
+}
+
+function increaseQuantity() {
+    const input = document.getElementById('itemQuantity');
+    if (parseInt(input.value) < 10) {
+        input.value = parseInt(input.value) + 1;
+        tempQuantity = parseInt(input.value);
+        updateModalTotal();
+    }
+}
+
+function decreaseQuantity() {
+    const input = document.getElementById('itemQuantity');
+    if (parseInt(input.value) > 1) {
+        input.value = parseInt(input.value) - 1;
+        tempQuantity = parseInt(input.value);
+        updateModalTotal();
+    }
+}
+
+function updateModalTotal() {
+    const quantity = parseInt(document.getElementById('itemQuantity').value);
+    const total = tempItem.price * quantity;
+    document.getElementById('modalTotal').innerText = `₹${total}`;
 }
 
 function confirmAddToCart() {
-    let prefs = [];
-    if(document.getElementById('opt-spicy').checked) prefs.push("Less Spicy");
-    if(document.getElementById('opt-oil').checked) prefs.push("Less Oil");
-    if(document.getElementById('opt-sugar').checked) prefs.push("Less Sugar");
-    
+    const quantity = parseInt(document.getElementById('itemQuantity').value);
     const note = document.getElementById('customNote').value;
     
-    const cartItem = {
-        ...tempItem,
-        cartId: Date.now(),
-        prefs: prefs,
-        note: note
-    };
-
-    cart.push(cartItem);
-    updateCartUI();
+    // Add items based on quantity
+    for (let i = 0; i < quantity; i++) {
+        cart.push({ ...tempItem, note: note, quantity: 1 });
+    }
+    
+    updateCart();
     closeModal();
     
-    // Toast simulation
-    const btn = document.querySelector('.search-btn');
-    if(btn) {
-        const originalColor = btn.style.backgroundColor;
-        btn.style.backgroundColor = "#4CAF50";
-        setTimeout(() => btn.style.backgroundColor = originalColor, 500);
-    }
+    // Show success message
+    showToast(`Added ${quantity} x ${tempItem.name} to cart!`);
 }
 
-function updateCartUI() {
-    const list = document.getElementById('cartList');
-    const badge = document.getElementById('cart-count');
-    const totalEl = document.getElementById('cartTotal');
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerText = message;
+    document.body.appendChild(toast);
     
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function updateCart() {
+    const list = document.getElementById('cartList');
     list.innerHTML = '';
     let total = 0;
-
-    cart.forEach((item, index) => {
-        total += parseInt(item.price);
-        const li = document.createElement('li');
-        
-        let subtext = item.prefs.join(', ');
-        if (item.note) subtext += (subtext ? ' | ' : '') + `"${item.note}"`;
-
-        li.innerHTML = `
-            <div style="flex-grow:1;">
-                <strong>${item.name}</strong> <br>
-                ${subtext ? `<span class="cust-badge">${subtext}</span>` : ''}
-            </div>
-            <div style="text-align:right;">
-                ₹${item.price}
-                <button class="remove-btn" onclick="removeItem(${index})">&times;</button>
-            </div>
-        `;
-        list.appendChild(li);
-    });
-
-    if (cart.length === 0) list.innerHTML = '<li class="empty-state">Plate is empty</li>';
     
-    totalEl.textContent = total;
-    badge.textContent = cart.length;
+    // Group items by name for better display
+    const groupedItems = {};
+    cart.forEach((item, idx) => {
+        const key = item.name;
+        if (!groupedItems[key]) {
+            groupedItems[key] = {
+                name: item.name,
+                price: item.price,
+                count: 0,
+                indices: []
+            };
+        }
+        groupedItems[key].count++;
+        groupedItems[key].indices.push(idx);
+        total += item.price;
+    });
+    
+    if (cart.length === 0) {
+        list.innerHTML = '<li class="empty-state">Plate is empty</li>';
+    } else {
+        Object.values(groupedItems).forEach(group => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${group.name} ${group.count > 1 ? `x${group.count}` : ''}</span>
+                <span class="price">₹${group.price * group.count}</span>
+                <button class="remove-btn" onclick="removeItemGroup('${group.name}')">×</button>
+            `;
+            list.appendChild(li);
+        });
+    }
+    
+    document.getElementById('cartTotal').innerText = total;
+    document.getElementById('cart-count').innerText = cart.length;
 }
 
-function removeItem(index) {
-    cart.splice(index, 1);
-    updateCartUI();
+function removeItemGroup(itemName) {
+    cart = cart.filter(item => item.name !== itemName);
+    updateCart();
+    showToast(`Removed ${itemName} from cart`);
 }
+
+function removeItem(idx) { cart.splice(idx, 1); updateCart(); }
 
 function placeOrder() {
-    if (cart.length === 0) {
-        alert("Please add food first!");
+    if (cart.length === 0) return alert("Empty Cart!");
+    showScreen('checkout');
+    loadCheckout();
+}
+
+function loadCheckout() {
+    // Populate order summary
+    const itemsDiv = document.getElementById('checkoutItems');
+    itemsDiv.innerHTML = '';
+    cart.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'summary-line';
+        div.innerHTML = `<span>${item.name}</span> <span>₹${item.price}</span>`;
+        itemsDiv.appendChild(div);
+    });
+
+    // Calculate totals
+    calculateTotal();
+
+    // Pre-fill delivery address with user info
+    document.getElementById('deliveryName').value = currentUser.name || '';
+    document.getElementById('deliveryPhone').value = currentUser.mobile || '';
+}
+
+function calculateTotal() {
+    const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+    const deliveryFee = 50;
+    const tax = Math.round(subtotal * 0.05); // 5% tax
+    const total = subtotal + deliveryFee + tax;
+
+    document.getElementById('checkoutSubtotal').innerText = subtotal;
+    document.getElementById('checkoutDelivery').innerText = deliveryFee;
+    document.getElementById('checkoutTax').innerText = tax;
+    document.getElementById('checkoutTotal').innerText = total;
+
+    return total;
+}
+
+function confirmPayment() {
+    // Validate forms
+    const name = document.getElementById('deliveryName').value;
+    const phone = document.getElementById('deliveryPhone').value;
+    const address = document.getElementById('deliveryAddress').value;
+    const cardNumber = document.getElementById('cardNumber').value;
+    const cardExpiry = document.getElementById('cardExpiry').value;
+    const cardCVV = document.getElementById('cardCVV').value;
+    const cardName = document.getElementById('cardName').value;
+
+    if (!name || !phone || !address || !cardNumber || !cardExpiry || !cardCVV || !cardName) {
+        alert("Please fill in all required fields.");
         return;
     }
-    alert("Order Sent to Mom! 🍲 She will accept it shortly.");
+
+    // Mock payment processing
+    alert("Processing payment...");
+
+    // Create order
+    const kId = cart[0].kitchenId;
+    const total = calculateTotal();
+
+    const newOrder = {
+        id: Date.now(),
+        kitchenId: kId,
+        studentName: currentUser.name || "Student",
+        items: [...cart],
+        total: total,
+        note: cart.map(i => i.note).filter(n => n).join('; ') || "Please deliver fast!",
+        status: 'Pending',
+        deliveryAddress: { name, phone, address }
+    };
+
+    ordersDB.push(newOrder);
+
+    // Clear cart and redirect
     cart = [];
-    updateCartUI();
+    updateCart();
+    alert("Payment successful! Order placed. 🚀");
+    showScreen('student-dashboard');
+    renderKitchensList();
 }
 
-function scrollToCart() {
-    const el = document.getElementById('cart-anchor');
-    if(el) el.scrollIntoView({ behavior: 'smooth' });
+function backToCart() {
+    showScreen('student-dashboard');
 }
 
+// --- UTILS ---
 function toggleNotifications() {
-    const dropdown = document.getElementById('notif-dropdown');
-    dropdown.classList.toggle('hidden');
-    if (!dropdown.classList.contains('hidden')) {
-        document.getElementById('notif-badge').style.display = 'none';
-    }
-}
-
-function openProfile() {
-    document.getElementById('profileModal').style.display = 'flex';
-}
-function closeProfile() {
-    document.getElementById('profileModal').style.display = 'none';
-}
-
-function addFoodItem() {
-    const name = document.getElementById('foodName').value;
-    const price = document.getElementById('foodPrice').value;
-    const cat = document.getElementById('mealCategory').value;
-
-    if(name && price) {
-        // Use default image for new items
-        menuDB.push({ 
-            id: Date.now(), 
-            name, 
-            price, 
-            category: cat,
-            image: getImg(name)
+    const d = document.getElementById('notif-dropdown');
+    d.classList.toggle('hidden');
+    const list = document.getElementById('notif-list');
+    list.innerHTML = '';
+    const myOrders = ordersDB.filter(o => o.studentName === currentUser.name && o.status !== 'Pending');
+    
+    if(myOrders.length === 0) {
+        list.innerHTML = '<li>No updates.</li>';
+    } else {
+        // Sort by most recent first
+        myOrders.sort((a, b) => b.id - a.id);
+        myOrders.forEach(o => {
+            const statusIcon = o.status === 'Accepted' ? '✅' : '❌';
+            const li = document.createElement('li');
+            li.innerHTML = `${statusIcon} Order #${o.id} (₹${o.total}): <strong>${o.status}</strong>`;
+            if (o.updatedAt) {
+                li.innerHTML += `<br><small>${o.updatedAt}</small>`;
+            }
+            list.appendChild(li);
         });
-        alert("Item added to menu!");
+        
+        // Update badge count
+        const badge = document.getElementById('notif-badge');
+        badge.innerText = myOrders.length;
+        badge.style.display = myOrders.length > 0 ? 'inline' : 'none';
     }
 }
-
-function updateBroadcast() {
-    const msg = document.getElementById('motherBroadcastInput').value;
-    document.getElementById('studentBroadcastDisplay').textContent = `"${msg}"`;
-    alert("Message updated!");
-}
+function scrollToCart() { document.getElementById('cart-anchor').scrollIntoView({behavior:'smooth'}); }
