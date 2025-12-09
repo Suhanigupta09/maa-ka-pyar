@@ -1,0 +1,9 @@
+Ui/Ux
+differentiate between login and signup process
+add database use firebase
+add admin dashboard for refund, and customer support
+kitchen features not working like setting kitchen timings
+fix refund issue visibility and request issue
+add bill generation foe the customer
+fix the order quantity visibility on both the dashboard
+add order cancellation button with time limit (eg: cancellation under 1 minute)
