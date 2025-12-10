@@ -4,10 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>माँ का प्यार - Maa Ka Pyaar</title>
-    <link rel="stylesheet" href="style.css">
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -23,6 +28,7 @@
                 <!-- These buttons set the role in JS -->
                 <button class="btn btn-primary btn-large" onclick="goToLogin('cook')">👩‍🍳 I am a Mother (Cook)</button>
                 <button class="btn btn-primary btn-large" onclick="goToLogin('student')">🧑‍💻 I am a Student</button>
+                <button class="btn btn-primary btn-large" onclick="goToLogin('admin')">👨‍💼 I am an Administrator</button>
             </div>
         </div>
     </div>
@@ -49,6 +55,7 @@
             <div class="nav-brand">👩‍🍳 My Kitchen Control</div>
             <div class="nav-icons">
                 <button class="btn btn-small" onclick="showScreen('mother-history')">📜 Order History</button>
+                <button class="btn btn-small" onclick="openSupportForm()">🎧 Support</button>
                 <span>Welcome, <b id="mom-name-display">Mother</b></span>
                 <button class="btn btn-small btn-secondary" onclick="logout()">Logout</button>
             </div>
@@ -108,6 +115,8 @@
                         <div id="kitchenStatusDisplay" style="margin-top: 10px; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold;">
                             Status: <span id="statusText">Closed</span>
                         </div>
+                        
+
                     </div>
                 </div>
             </div>
@@ -148,9 +157,10 @@
     <!-- --- STUDENT DASHBOARD --- -->
     <div id="student-dashboard-screen" class="screen">
         <nav class="student-nav">
-            <div class="nav-brand">🍲 H-Love</div>
+            <div class="nav-brand">❤️ माँ का प्यार</div>
             <div class="nav-icons">
                 <button class="btn btn-small" onclick="showScreen('student-history')">📜 My Orders</button>
+                <button class="btn btn-small" onclick="openSupportForm()">🎧 Support</button>
                 <div class="icon-wrap" onclick="toggleNotifications()">
                     🔔 <span id="notif-badge" class="badge" style="display:none">0</span>
                     <div id="notif-dropdown" class="dropdown hidden">
@@ -285,6 +295,175 @@
         </div>
     </div>
 
+    <!-- --- ADMIN DASHBOARD --- -->
+    <div id="admin-dashboard-screen" class="screen">
+        <nav class="student-nav" style="border-bottom: 4px solid var(--info-blue);">
+            <div class="nav-brand">👨‍💼 Admin Dashboard</div>
+            <div class="nav-icons">
+                <button class="btn btn-small" onclick="showAdminSection('refunds')">💰 Refunds</button>
+                <button class="btn btn-small" onclick="showAdminSection('support')">🎧 Support</button>
+                <button class="btn btn-small" onclick="showAdminSection('analytics')">📊 Analytics</button>
+                <button class="btn btn-small" onclick="showAdminSection('users')">👥 Users</button>
+                <span>Welcome, <b id="admin-name-display">Admin</b></span>
+                <button class="btn btn-small btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </nav>
+
+        <div class="container">
+            <!-- Refund Management Section -->
+            <div id="admin-refunds-section" class="admin-section">
+                <h2 class="section-title">💰 Refund Management</h2>
+                
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <h3 id="pending-refunds-count">0</h3>
+                        <p>Pending Refunds</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="total-refund-amount">₹0</h3>
+                        <p>Total Refund Amount</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="processed-refunds-count">0</h3>
+                        <p>Processed Today</p>
+                    </div>
+                </div>
+
+                <div class="refund-requests-panel">
+                    <h3>🔔 Pending Refund Requests</h3>
+                    <div id="adminRefundList" class="orders-list">
+                        <p class="empty-state">No pending refund requests.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Management Section -->
+            <div id="admin-support-section" class="admin-section hidden">
+                <h2 class="section-title">🎧 Customer Support</h2>
+                
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <h3 id="open-tickets-count">0</h3>
+                        <p>Open Tickets</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="avg-response-time">0h</h3>
+                        <p>Avg Response Time</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="resolved-tickets-count">0</h3>
+                        <p>Resolved Today</p>
+                    </div>
+                </div>
+
+                <div class="support-tickets-panel">
+                    <h3>🎫 Support Tickets</h3>
+                    <div id="adminSupportList" class="orders-list">
+                        <p class="empty-state">No support tickets.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div id="admin-analytics-section" class="admin-section hidden">
+                <h2 class="section-title">📊 Platform Analytics</h2>
+                
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <h3 id="total-orders-count">0</h3>
+                        <p>Total Orders</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="total-revenue">₹0</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="active-kitchens-count">0</h3>
+                        <p>Active Kitchens</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="total-users-count">0</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+
+                <div class="analytics-charts">
+                    <div class="chart-card">
+                        <h3>📈 Orders This Week</h3>
+                        <div id="ordersChart" class="chart-placeholder">
+                            <p>Chart visualization would go here</p>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>💰 Revenue Trends</h3>
+                        <div id="revenueChart" class="chart-placeholder">
+                            <p>Revenue chart would go here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management Section -->
+            <div id="admin-users-section" class="admin-section hidden">
+                <h2 class="section-title">👥 User Management</h2>
+                
+                <div class="user-management-panel">
+                    <h3>👨‍🍳 Registered Cooks</h3>
+                    <div id="adminCooksList" class="users-list">
+                        <p class="empty-state">No registered cooks.</p>
+                    </div>
+                </div>
+
+                <div class="user-management-panel">
+                    <h3>🧑‍💻 Registered Students</h3>
+                    <div id="adminStudentsList" class="users-list">
+                        <p class="empty-state">No registered students.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Ticket Modal -->
+    <div id="supportTicketModal" class="modal">
+        <div class="modal-content">
+            <h3>🎫 Support Ticket Details</h3>
+            <div id="ticketDetails">
+                <!-- Ticket details will be populated here -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-text" onclick="closeSupportModal()">Close</button>
+                <button class="btn btn-primary" onclick="respondToTicket()">Respond</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Form Modal -->
+    <div id="supportFormModal" class="modal">
+        <div class="modal-content">
+            <h3>🎧 Contact Support</h3>
+            <form id="supportForm" onsubmit="submitSupportTicket(event)">
+                <label class="small-label">Subject</label>
+                <input type="text" id="supportSubject" placeholder="Brief description of your issue" required>
+                
+                <label class="small-label">Priority</label>
+                <select id="supportPriority">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                </select>
+                
+                <label class="small-label">Description</label>
+                <textarea id="supportDescription" placeholder="Please describe your issue in detail..." rows="5" required></textarea>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-text" onclick="closeSupportForm()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- --- MODAL --- -->
     <div id="customModal" class="modal">
         <div class="modal-content">
@@ -314,6 +493,22 @@
         </div>
     </div>
 
+    <!-- Firebase SDK (v9 compat mode) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="js/firebase-config.js"></script>
+    
+    <!-- Firebase Manager -->
+    <script src="js/firebase-manager.js"></script>
+    
+    <!-- Utility Functions -->
+    <script src="js/utils.js"></script>
+    
+    <!-- Application Script -->
     <script src="script.js"></script> 
 </body>
 </html>

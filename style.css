@@ -1343,6 +1343,195 @@ label,
     }
 }
 
+/* ===== ADMIN DASHBOARD STYLES ===== */
+.admin-section {
+    display: block;
+}
+
+.admin-section.hidden {
+    display: none;
+}
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+    background: var(--white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+    border-top: 4px solid var(--info-blue);
+    transition: transform var(--transition-fast);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card h3 {
+    font-size: var(--font-size-xxxl);
+    color: var(--info-blue);
+    margin-bottom: var(--spacing-xs);
+    font-weight: bold;
+}
+
+.stat-card p {
+    color: var(--dark-gray);
+    font-size: var(--font-size-sm);
+    margin: 0;
+}
+
+.refund-requests-panel,
+.support-tickets-panel,
+.user-management-panel {
+    background: var(--white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.refund-requests-panel h3,
+.support-tickets-panel h3,
+.user-management-panel h3 {
+    color: var(--primary-green);
+    border-bottom: 2px solid var(--light-green);
+    padding-bottom: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+}
+
+.analytics-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+}
+
+.chart-card {
+    background: var(--white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.chart-card h3 {
+    color: var(--primary-green);
+    margin-bottom: var(--spacing-md);
+}
+
+.chart-placeholder {
+    height: 200px;
+    background: var(--light-gray);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dark-gray);
+    font-style: italic;
+}
+
+.users-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.user-card {
+    background: var(--light-gray);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info h4 {
+    color: var(--earth-brown);
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.user-info p {
+    color: var(--dark-gray);
+    font-size: var(--font-size-sm);
+    margin: 0;
+}
+
+.user-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.btn-admin {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-sm);
+}
+
+.btn-approve {
+    background: var(--success-green);
+    color: var(--white);
+}
+
+.btn-decline {
+    background: var(--error-red);
+    color: var(--white);
+}
+
+.btn-respond {
+    background: var(--info-blue);
+    color: var(--white);
+}
+
+.btn-suspend {
+    background: var(--warning-orange);
+    color: var(--white);
+}
+
+.ticket-card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    border-left: 4px solid var(--info-blue);
+}
+
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.ticket-priority {
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.priority-high {
+    background: var(--light-red);
+    color: var(--error-red);
+}
+
+.priority-medium {
+    background: #fff3e0;
+    color: var(--warning-orange);
+}
+
+.priority-low {
+    background: var(--light-green);
+    color: var(--primary-green);
+}
+
 /* Mobile (480px and below) */
 @media (max-width: 480px) {
     :root {
@@ -1363,7 +1552,106 @@ label,
         font-size: var(--font-size-sm);
     }
 
-    .student-nav {
+    .admin-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-charts {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-icons {
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
+    }
+}
+
+/* ===== BILL STYLES ===== */
+.bill-container {
+    background: var(--white);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.bill-header {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 2px solid var(--primary-green);
+    padding-bottom: var(--spacing-md);
+}
+
+.bill-header h2 {
+    color: var(--primary-green);
+    margin-bottom: var(--spacing-xs);
+}
+
+.bill-info {
+    margin-bottom: var(--spacing-lg);
+}
+
+.customer-details {
+    background: var(--light-gray);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-top: var(--spacing-md);
+}
+
+.bill-items table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: var(--spacing-lg);
+}
+
+.bill-items th {
+    background: var(--primary-green);
+    color: var(--white);
+    padding: var(--spacing-sm);
+    text-align: left;
+    border: 1px solid var(--border-color);
+}
+
+.bill-items td {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+}
+
+.bill-summary {
+    border-top: 2px solid var(--primary-green);
+    padding-top: var(--spacing-md);
+}
+
+.bill-summary .total-row {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--primary-green);
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.bill-footer {
+    margin-top: var(--spacing-xl);
+    text-align: center;
+    color: var(--dark-gray);
+    font-size: var(--font-size-sm);
+    border-top: 1px solid var(--light-gray);
+    padding-top: var(--spacing-md);
+}
+
+@media print {
+    .modal-actions {
+        display: none !important;
+    }
+    
+    .bill-container {
+        box-shadow: none;
+        margin: 0;
+        padding: 20px;
+    }
+}student-nav {
         padding: var(--spacing-xs) var(--spacing-sm);
     }
 
