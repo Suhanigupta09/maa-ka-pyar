@@ -930,6 +930,136 @@ html {
     bottom: 32px;
 }
 
+/* ===== PART 18: KITCHEN DETAILS & TRACKING ===== */
+.kitchen-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.kitchen-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.meta-icon {
+    font-size: 16px;
+}
+
+.meta-text {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.meta-divider {
+    color: var(--text-light);
+}
+
+.kitchen-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tag {
+    background: #EEF3F0;
+    color: var(--primary-dark);
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chip-open {
+    background: #E8F5E9;
+    color: var(--status-accepted);
+}
+
+.chip-closed {
+    background: #FFEBEE;
+    color: var(--status-rejected);
+}
+
+.info-banner {
+    background: #FFF3E0;
+    color: #BF360C;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    border: 1px solid #FFE0B2;
+    font-weight: 600;
+}
+
+.order-timeline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.timeline-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-light);
+    font-size: 13px;
+}
+
+.timeline-step .step-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--border-color);
+    position: relative;
+    box-shadow: inset 0 0 0 2px #fff;
+}
+
+.timeline-step.step-active {
+    color: var(--primary-dark);
+    font-weight: 700;
+}
+
+.timeline-step.step-active .step-dot {
+    background: var(--primary-light);
+    box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.2);
+}
+
+.inline-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.checkbox-row input {
+    width: auto;
+}
+
 /* ===== PART 15: CARDS (General Purpose) ===== */
 .card {
     background: var(--bg-white);

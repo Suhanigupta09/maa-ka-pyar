@@ -28,6 +28,17 @@ let ordersDatabase = [];
 // Counter for generating unique order IDs
 let orderIdCounter = 1;
 
+// Order lifecycle for basic tracking
+const ORDER_STEPS = ['pending', 'accepted', 'preparing', 'out_for_delivery', 'delivered'];
+const ORDER_STEP_LABELS = {
+    pending: 'Pending',
+    accepted: 'Accepted',
+    preparing: 'Preparing',
+    out_for_delivery: 'Out for Delivery',
+    delivered: 'Delivered',
+    rejected: 'Rejected'
+};
+
 /* ===== PART 2: MOCK DATA (Sample Kitchens and Menus) ===== */
 
 // List of Available Kitchens
@@ -38,7 +49,14 @@ let kitchens = [
         ownerName: "Suman",
         specialty: "North Indian Home Food",
         rating: 4.8,
-        icon: "👩‍🍳"
+        icon: "👩‍🍳",
+        address: "Sector 14, Near City Park",
+        distanceKm: 2.1,
+        avgDeliveryMins: 28,
+        openTime: "09:00",
+        closeTime: "21:00",
+        isOnline: true,
+        tags: ['Dal Rice', 'Paratha', 'Comfort Food']
     },
     {
         id: 2,
@@ -46,7 +64,14 @@ let kitchens = [
         ownerName: "Radha",
         specialty: "Gujarati Cuisine",
         rating: 4.5,
-        icon: "🍛"
+        icon: "🍛",
+        address: "Vijay Nagar, Opp. Market Road",
+        distanceKm: 3.4,
+        avgDeliveryMins: 32,
+        openTime: "08:30",
+        closeTime: "20:30",
+        isOnline: true,
+        tags: ['Thepla', 'Farsan', 'Sweet Tooth']
     },
     {
         id: 3,
@@ -54,7 +79,14 @@ let kitchens = [
         ownerName: "Priya",
         specialty: "South Indian Food",
         rating: 4.9,
-        icon: "🍲"
+        icon: "🍲",
+        address: "MG Road, Near Metro Station",
+        distanceKm: 1.6,
+        avgDeliveryMins: 24,
+        openTime: "07:30",
+        closeTime: "22:00",
+        isOnline: true,
+        tags: ['Idli', 'Dosa', 'Filter Coffee']
     }
 ];
 
@@ -98,6 +130,11 @@ function showScreen(screenId) {
     if (targetScreen) {
         targetScreen.classList.add('active');
         console.log('Switched to screen:', screenId);
+        if (screenId === 'mother-dashboard' && currentUser.role === 'mother') {
+            loadMotherKitchenDetails();
+            loadMotherMenu();
+            loadMotherOrders();
+        }
     } else {
         console.error('Screen not found:', screenId);
     }
@@ -134,6 +171,45 @@ function formatDate(date) {
         minute: '2-digit'
     };
     return date.toLocaleDateString('en-IN', options);
+}
+
+/**
+ * Converts 24h time string to 12h format
+ */
+function formatTimeRange(open, close) {
+    const toPretty = (t) => {
+        const [h, m] = t.split(':').map(Number);
+        const hours12 = ((h + 11) % 12) + 1;
+        const suffix = h >= 12 ? 'PM' : 'AM';
+        return `${hours12}:${m.toString().padStart(2, '0')} ${suffix}`;
+    };
+    return `${toPretty(open)} - ${toPretty(close)}`;
+}
+
+/**
+ * Checks if current time falls within kitchen hours
+ */
+function isWithinKitchenHours(kitchen) {
+    const now = new Date();
+    const [openH, openM] = kitchen.openTime.split(':').map(Number);
+    const [closeH, closeM] = kitchen.closeTime.split(':').map(Number);
+    const openMinutes = openH * 60 + openM;
+    const closeMinutes = closeH * 60 + closeM;
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+}
+
+/**
+ * Checks if kitchen is currently open (online + within hours)
+ */
+function isKitchenOpen(kitchen) {
+    if (kitchen.isOnline === false) return false;
+    return isWithinKitchenHours(kitchen);
+}
+
+function getStatusClass(status) {
+    const slug = status.replace(/\s+/g, '-').toLowerCase();
+    return `status-${slug}`;
 }
 
 /* ===== PART 4: AUTHENTICATION FUNCTIONS ===== */
@@ -192,6 +268,7 @@ function handleLogin(event) {
         // Update mother's name in dashboard
         document.getElementById('mother-name').textContent = name;
         showScreen('mother-dashboard');
+        loadMotherKitchenDetails();
         loadMotherMenu();
         loadMotherOrders();
     }
@@ -226,6 +303,11 @@ function loadKitchensList() {
     container.innerHTML = ''; // Clear existing content
     
     kitchens.forEach(kitchen => {
+        const isOnline = kitchen.isOnline !== false;
+        const withinHours = isWithinKitchenHours(kitchen);
+        const isOpen = isOnline && withinHours;
+        const statusLabel = !isOnline ? 'Offline' : isOpen ? 'Open Now' : 'Closed';
+        const hours = formatTimeRange(kitchen.openTime, kitchen.closeTime);
         const card = document.createElement('div');
         card.className = 'kitchen-card';
         card.onclick = () => selectKitchen(kitchen.id);
@@ -233,8 +315,17 @@ function loadKitchensList() {
         card.innerHTML = `
             <div class="kitchen-image">${kitchen.icon}</div>
             <div class="kitchen-details">
-                <h3 class="kitchen-name">${kitchen.name}</h3>
+                <div class="kitchen-top-row">
+                    <h3 class="kitchen-name">${kitchen.name}</h3>
+                    <span class="chip ${isOpen ? 'chip-open' : 'chip-closed'}">${statusLabel}</span>
+                </div>
                 <p class="kitchen-specialty">${kitchen.specialty}</p>
+                <div class="kitchen-meta-row">
+                    <span>⏱️ ${kitchen.avgDeliveryMins} mins</span>
+                    <span>📍 ${kitchen.distanceKm} km</span>
+                    <span>🕒 ${hours}</span>
+                </div>
+                <div class="kitchen-tags">${kitchen.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>
                 <span class="rating">⭐ ${kitchen.rating}</span>
             </div>
         `;
@@ -264,6 +355,27 @@ function selectKitchen(kitchenId) {
     document.getElementById('selected-kitchen-name').textContent = selectedKitchen.name;
     document.getElementById('selected-kitchen-specialty').textContent = selectedKitchen.specialty;
     document.getElementById('selected-kitchen-rating').textContent = `⭐ ${selectedKitchen.rating}`;
+    const hours = formatTimeRange(selectedKitchen.openTime, selectedKitchen.closeTime);
+    const isOnline = selectedKitchen.isOnline !== false;
+    const withinHours = isWithinKitchenHours(selectedKitchen);
+    const isOpen = isOnline && withinHours;
+    const openStatus = document.getElementById('kitchen-open-status');
+    const hoursEl = document.getElementById('kitchen-hours');
+    const distanceEl = document.getElementById('kitchen-distance');
+    const etaEl = document.getElementById('kitchen-eta');
+    const addressEl = document.getElementById('kitchen-address');
+    const tagContainer = document.getElementById('kitchen-tags');
+
+    if (openStatus) {
+        const statusLabel = !isOnline ? 'Offline' : isOpen ? 'Open Now' : 'Closed';
+        openStatus.textContent = statusLabel;
+        openStatus.className = `chip ${isOpen ? 'chip-open' : 'chip-closed'}`;
+    }
+    if (hoursEl) hoursEl.textContent = hours;
+    if (distanceEl) distanceEl.textContent = `${selectedKitchen.distanceKm} km away`;
+    if (etaEl) etaEl.textContent = `${selectedKitchen.avgDeliveryMins} mins avg delivery`;
+    if (addressEl) addressEl.textContent = selectedKitchen.address;
+    if (tagContainer) tagContainer.innerHTML = (selectedKitchen.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
     
     // Load menu for default category
     currentCategory = 'breakfast';
@@ -310,6 +422,17 @@ function updateActiveTab(activeCategory) {
 function loadMenu() {
     const container = document.getElementById('menu-items-container');
     container.innerHTML = ''; // Clear existing items
+
+    // Show notice if kitchen is closed
+    if (!isKitchenOpen(selectedKitchen)) {
+        const banner = document.createElement('div');
+        banner.className = 'info-banner';
+        const isOnline = selectedKitchen.isOnline !== false;
+        banner.textContent = isOnline
+            ? 'Kitchen is currently closed. You can still browse the menu and place a pre-order.'
+            : 'Kitchen is offline right now. You can browse the menu and place a pre-order.';
+        container.appendChild(banner);
+    }
     
     // Filter items by kitchen and category
     const items = menuItems.filter(item => 
@@ -318,7 +441,7 @@ function loadMenu() {
     );
     
     if (items.length === 0) {
-        container.innerHTML = '<p class="empty-message">No items available in this category</p>';
+        container.innerHTML += '<p class="empty-message">No items available in this category</p>';
         return;
     }
     
@@ -447,6 +570,49 @@ function toggleCart() {
     sidebar.classList.toggle('show-mobile');
 }
 
+function clearOrderTimers(order) {
+    if (order._timers) {
+        order._timers.forEach(id => clearTimeout(id));
+        order._timers = [];
+    }
+}
+
+function startOrderTracking(order, startIndex = 0) {
+    clearOrderTimers(order);
+    order._timers = [];
+    const remaining = ORDER_STEPS.slice(startIndex + 1);
+    remaining.forEach((step, idx) => {
+        const timerId = setTimeout(() => {
+            if (order.status === 'rejected') return;
+            order.status = step;
+            order.statusIndex = ORDER_STEPS.indexOf(step);
+            order.stepHistory.push({ step, time: new Date() });
+            refreshOrderViews();
+        }, (idx + 1) * 4000); // every 4 seconds for demo
+        order._timers.push(timerId);
+    });
+}
+
+function refreshOrderViews() {
+    loadStudentOrders();
+    loadMotherOrders();
+    loadMotherOrdersHistory();
+}
+
+function renderTimeline(order) {
+    const activeIndex = ORDER_STEPS.indexOf(order.status);
+    const stepsHtml = ORDER_STEPS.map((step, idx) => {
+        const isActive = idx <= activeIndex;
+        return `
+            <div class="timeline-step ${isActive ? 'step-active' : ''}">
+                <div class="step-dot"></div>
+                <span class="step-label">${ORDER_STEP_LABELS[step]}</span>
+            </div>
+        `;
+    }).join('');
+    return `<div class="order-timeline">${stepsHtml}</div>`;
+}
+
 /**
  * Places an order with current cart items
  */
@@ -469,11 +635,15 @@ function placeOrder() {
         items: [...shoppingCart], // Copy cart items
         total: total,
         status: 'pending',
+        statusIndex: 0,
+        stepHistory: [{ step: 'pending', time: new Date() }],
         date: new Date()
     };
     
     // Add to orders database
     ordersDatabase.push(order);
+    startOrderTracking(order, 0);
+    refreshOrderViews();
     
     // Clear cart
     shoppingCart = [];
@@ -522,8 +692,8 @@ function loadStudentOrders() {
         });
         
         // Status badge class
-        let statusClass = 'status-' + order.status;
-        let statusText = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+        const statusClass = getStatusClass(order.status);
+        const statusText = ORDER_STEP_LABELS[order.status] || order.status;
         
         card.innerHTML = `
             <div class="order-header">
@@ -538,6 +708,7 @@ function loadStudentOrders() {
                 <div class="order-items-list">${itemsHTML}</div>
                 <div class="order-total">Total: ₹${order.total}</div>
             </div>
+            ${renderTimeline(order)}
         `;
         
         container.appendChild(card);
@@ -545,6 +716,86 @@ function loadStudentOrders() {
 }
 
 /* ===== PART 6: MOTHER DASHBOARD FUNCTIONS ===== */
+
+function getOrCreateMotherKitchen() {
+    let kitchen = kitchens.find(k => k.ownerName === currentUser.name);
+    if (!kitchen) {
+        kitchen = {
+            id: kitchens.length + 1,
+            name: currentUser.name + "'s Kitchen",
+            ownerName: currentUser.name,
+            specialty: 'Home Food',
+            rating: 5.0,
+            icon: '👩‍🍳',
+            address: 'Local Area',
+            distanceKm: 1.5,
+            avgDeliveryMins: 30,
+            openTime: '09:00',
+            closeTime: '21:00',
+            isOnline: true,
+            tags: ['Home Style']
+        };
+        kitchens.push(kitchen);
+    }
+    if (!Array.isArray(kitchen.tags)) kitchen.tags = [];
+    if (kitchen.isOnline === undefined) kitchen.isOnline = true;
+    return kitchen;
+}
+
+function loadMotherKitchenDetails() {
+    const kitchen = getOrCreateMotherKitchen();
+    const nameEl = document.getElementById('mother-kitchen-name');
+    const specialtyEl = document.getElementById('mother-kitchen-specialty');
+    const addressEl = document.getElementById('mother-kitchen-address');
+    const distanceEl = document.getElementById('mother-kitchen-distance');
+    const etaEl = document.getElementById('mother-kitchen-eta');
+    const openEl = document.getElementById('mother-kitchen-open');
+    const closeEl = document.getElementById('mother-kitchen-close');
+    const tagsEl = document.getElementById('mother-kitchen-tags');
+    const onlineEl = document.getElementById('mother-kitchen-online');
+
+    if (nameEl) nameEl.value = kitchen.name || '';
+    if (specialtyEl) specialtyEl.value = kitchen.specialty || '';
+    if (addressEl) addressEl.value = kitchen.address || '';
+    if (distanceEl) distanceEl.value = kitchen.distanceKm || '';
+    if (etaEl) etaEl.value = kitchen.avgDeliveryMins || '';
+    if (openEl) openEl.value = kitchen.openTime || '09:00';
+    if (closeEl) closeEl.value = kitchen.closeTime || '21:00';
+    if (tagsEl) tagsEl.value = (kitchen.tags || []).join(', ');
+    if (onlineEl) onlineEl.checked = kitchen.isOnline !== false;
+}
+
+function saveKitchenDetails(event) {
+    event.preventDefault();
+    const kitchen = getOrCreateMotherKitchen();
+    const name = document.getElementById('mother-kitchen-name').value.trim();
+    const specialty = document.getElementById('mother-kitchen-specialty').value.trim();
+    const address = document.getElementById('mother-kitchen-address').value.trim();
+    const distance = parseFloat(document.getElementById('mother-kitchen-distance').value);
+    const eta = parseInt(document.getElementById('mother-kitchen-eta').value, 10);
+    const openTime = document.getElementById('mother-kitchen-open').value || '09:00';
+    const closeTime = document.getElementById('mother-kitchen-close').value || '21:00';
+    const tagsRaw = document.getElementById('mother-kitchen-tags').value;
+    const isOnline = document.getElementById('mother-kitchen-online').checked;
+
+    kitchen.name = name || kitchen.name;
+    kitchen.specialty = specialty || kitchen.specialty;
+    kitchen.address = address || kitchen.address;
+    if (!isNaN(distance)) kitchen.distanceKm = distance;
+    if (!isNaN(eta)) kitchen.avgDeliveryMins = eta;
+    kitchen.openTime = openTime;
+    kitchen.closeTime = closeTime;
+    kitchen.isOnline = isOnline;
+    kitchen.tags = tagsRaw
+        .split(',')
+        .map(t => t.trim())
+        .filter(Boolean);
+
+    showToast('✅ Kitchen details updated');
+    loadKitchensList();
+    loadMotherMenu();
+    loadMotherOrders();
+}
 
 /**
  * Loads mother's menu items
@@ -602,20 +853,7 @@ function addMenuItem(event) {
     }
     
     // Find or create kitchen for this mother
-    let kitchen = kitchens.find(k => k.ownerName === currentUser.name);
-    
-    if (!kitchen) {
-        // Create new kitchen
-        kitchen = {
-            id: kitchens.length + 1,
-            name: currentUser.name + "'s Kitchen",
-            ownerName: currentUser.name,
-            specialty: "Home Food",
-            rating: 5.0,
-            icon: "👩‍🍳"
-        };
-        kitchens.push(kitchen);
-    }
+    const kitchen = getOrCreateMotherKitchen();
     
     // Add menu item
     const newItem = {
@@ -676,9 +914,9 @@ function getCategoryIcon(category) {
 function loadMotherOrders() {
     const container = document.getElementById('mother-orders-list');
     
-    // Filter pending orders for this mother
+    // Filter active orders for this mother
     const incomingOrders = ordersDatabase.filter(
-        order => order.kitchenOwner === currentUser.name && order.status === 'pending'
+        order => order.kitchenOwner === currentUser.name && !['delivered','rejected'].includes(order.status)
     );
     
     if (incomingOrders.length === 0) {
@@ -691,6 +929,8 @@ function loadMotherOrders() {
     incomingOrders.forEach(order => {
         const card = document.createElement('div');
         card.className = 'order-card';
+        const statusClass = getStatusClass(order.status);
+        const statusText = ORDER_STEP_LABELS[order.status] || order.status;
         
         // Generate items list HTML
         let itemsHTML = '';
@@ -707,21 +947,19 @@ function loadMotherOrders() {
                     <div class="order-id">Order #${order.id}</div>
                     <div class="order-date">${formatDate(order.date)}</div>
                 </div>
-                <span class="order-status status-pending">Pending</span>
+                <span class="order-status ${statusClass}">${statusText}</span>
             </div>
             <div class="order-details">
                 <div class="order-from">From: ${order.studentName} (${order.studentMobile})</div>
                 <div class="order-items-list">${itemsHTML}</div>
                 <div class="order-total">Total: ₹${order.total}</div>
             </div>
-            <div class="order-actions">
-                <button class="btn btn-primary btn-sm" onclick="acceptOrder(${order.id})">
-                    ✓ Accept
-                </button>
-                <button class="btn btn-danger btn-sm" onclick="rejectOrder(${order.id})">
-                    ✕ Reject
-                </button>
-            </div>
+            ${renderTimeline(order)}
+            ${order.status === 'pending' ? `
+                <div class="order-actions">
+                    <button class="btn btn-primary btn-sm" onclick="acceptOrder(${order.id})">✓ Accept</button>
+                    <button class="btn btn-danger btn-sm" onclick="rejectOrder(${order.id})">✕ Reject</button>
+                </div>` : ''}
         `;
         
         container.appendChild(card);
@@ -736,8 +974,10 @@ function acceptOrder(orderId) {
     const order = ordersDatabase.find(o => o.id === orderId);
     if (order) {
         order.status = 'accepted';
-        loadMotherOrders();
-        loadMotherOrdersHistory();
+        order.statusIndex = ORDER_STEPS.indexOf('accepted');
+        order.stepHistory.push({ step: 'accepted', time: new Date() });
+        startOrderTracking(order, order.statusIndex);
+        refreshOrderViews();
         showToast('✅ Order accepted!');
     }
 }
@@ -750,8 +990,10 @@ function rejectOrder(orderId) {
     const order = ordersDatabase.find(o => o.id === orderId);
     if (order) {
         order.status = 'rejected';
-        loadMotherOrders();
-        loadMotherOrdersHistory();
+        order.statusIndex = -1;
+        order.stepHistory.push({ step: 'rejected', time: new Date() });
+        clearOrderTimers(order);
+        refreshOrderViews();
         showToast('❌ Order rejected');
     }
 }
@@ -789,8 +1031,8 @@ function loadMotherOrdersHistory() {
         });
         
         // Status badge
-        let statusClass = 'status-' + order.status;
-        let statusText = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+        const statusClass = getStatusClass(order.status);
+        const statusText = ORDER_STEP_LABELS[order.status] || order.status;
         
         card.innerHTML = `
             <div class="order-header">
@@ -805,6 +1047,7 @@ function loadMotherOrdersHistory() {
                 <div class="order-items-list">${itemsHTML}</div>
                 <div class="order-total">Total: ₹${order.total}</div>
             </div>
+            ${renderTimeline(order)}
         `;
         
         container.appendChild(card);

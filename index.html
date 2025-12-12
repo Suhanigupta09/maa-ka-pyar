@@ -142,6 +142,26 @@
                         <h2 id="selected-kitchen-name">Kitchen Name</h2>
                         <p id="selected-kitchen-specialty">Specialty</p>
                         <span id="selected-kitchen-rating" class="rating">⭐ 5.0</span>
+                        <div class="kitchen-meta">
+                            <div class="kitchen-meta-row">
+                                <span id="kitchen-open-status" class="chip">Status</span>
+                                <span id="kitchen-hours" class="meta-text"></span>
+                            </div>
+                            <div class="kitchen-meta-row">
+                                <span class="meta-icon">📍</span>
+                                <span id="kitchen-address" class="meta-text"></span>
+                            </div>
+                            <div class="kitchen-meta-row">
+                                <span class="meta-icon">📏</span>
+                                <span id="kitchen-distance" class="meta-text"></span>
+                                <span class="meta-divider">•</span>
+                                <span id="kitchen-eta" class="meta-text"></span>
+                            </div>
+                            <div class="kitchen-meta-row">
+                                <span class="meta-icon">🏷️</span>
+                                <div id="kitchen-tags" class="kitchen-tags"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Menu Category Tabs -->
@@ -238,6 +258,54 @@
         <div class="dashboard-content">
             <!-- LEFT: Incoming Orders -->
             <div class="main-section">
+                <div class="card">
+                    <h3>🏠 Kitchen Details</h3>
+                    <form id="kitchen-details-form" onsubmit="saveKitchenDetails(event)">
+                        <div class="input-group">
+                            <label for="mother-kitchen-name">Kitchen Name</label>
+                            <input type="text" id="mother-kitchen-name" placeholder="e.g., Mom's Tiffin" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="mother-kitchen-specialty">Specialty</label>
+                            <input type="text" id="mother-kitchen-specialty" placeholder="e.g., North Indian Home Food" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="mother-kitchen-address">Address / Landmark</label>
+                            <input type="text" id="mother-kitchen-address" placeholder="Area, street, nearby landmark" required>
+                        </div>
+                        <div class="inline-fields">
+                            <div class="input-group">
+                                <label for="mother-kitchen-distance">Distance (km)</label>
+                                <input type="number" step="0.1" min="0" id="mother-kitchen-distance" placeholder="2.0" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="mother-kitchen-eta">Avg Delivery (mins)</label>
+                                <input type="number" min="5" id="mother-kitchen-eta" placeholder="30" required>
+                            </div>
+                        </div>
+                        <div class="inline-fields">
+                            <div class="input-group">
+                                <label for="mother-kitchen-open">Opens At</label>
+                                <input type="time" id="mother-kitchen-open" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="mother-kitchen-close">Closes At</label>
+                                <input type="time" id="mother-kitchen-close" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="mother-kitchen-tags">Tags (comma separated)</label>
+                            <input type="text" id="mother-kitchen-tags" placeholder="Home Style, Dal Rice, Paratha">
+                        </div>
+                        <div class="checkbox-row">
+                            <label>
+                                <input type="checkbox" id="mother-kitchen-online" checked>
+                                Online (show as available)
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">💾 Save Kitchen Details</button>
+                    </form>
+                </div>
                 <div class="card">
                     <h3>🔔 Incoming Orders</h3>
                     <div id="mother-orders-list" class="orders-list">
