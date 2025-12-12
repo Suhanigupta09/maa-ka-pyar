@@ -121,6 +121,11 @@ let menuItems = [
  * @param {string} screenId - ID of screen to show (without '-screen' suffix)
  */
 function showScreen(screenId) {
+    if (!screenId) {
+        console.error('showScreen: screenId is required');
+        return;
+    }
+    
     // Remove 'active' class from all screens
     const allScreens = document.querySelectorAll('.screen');
     allScreens.forEach(screen => screen.classList.remove('active'));
@@ -145,8 +150,15 @@ function showScreen(screenId) {
  * @param {string} message - Message to display
  */
 function showToast(message) {
+    if (!message) return;
+    
     const toast = document.getElementById('toast-notification');
     const toastMessage = document.getElementById('toast-message');
+    
+    if (!toast || !toastMessage) {
+        console.warn('Toast elements not found. Message:', message);
+        return;
+    }
     
     toastMessage.textContent = message;
     toast.classList.add('show');
@@ -266,7 +278,10 @@ function handleLogin(event) {
         updateCartBadge();
     } else if (currentUser.role === 'mother') {
         // Update mother's name in dashboard
-        document.getElementById('mother-name').textContent = name;
+        const motherNameEl = document.getElementById('mother-name');
+        if (motherNameEl) {
+            motherNameEl.textContent = name;
+        }
         showScreen('mother-dashboard');
         loadMotherKitchenDetails();
         loadMotherMenu();
@@ -513,12 +528,19 @@ function updateCartDisplay() {
     const container = document.getElementById('cart-items-list');
     const placeOrderBtn = document.getElementById('place-order-btn');
     
+    if (!container || !placeOrderBtn) {
+        console.warn('Cart display elements not found');
+        return;
+    }
+    
     // If cart is empty
     if (shoppingCart.length === 0) {
         container.innerHTML = '<p class="empty-message">Your cart is empty</p>';
         placeOrderBtn.disabled = true;
-        document.getElementById('cart-item-count').textContent = '0';
-        document.getElementById('cart-total').textContent = '0';
+        const cartCount = document.getElementById('cart-item-count');
+        const cartTotal = document.getElementById('cart-total');
+        if (cartCount) cartCount.textContent = '0';
+        if (cartTotal) cartTotal.textContent = '0';
         return;
     }
     
@@ -637,12 +659,13 @@ function placeOrder() {
         status: 'pending',
         statusIndex: 0,
         stepHistory: [{ step: 'pending', time: new Date() }],
+        _timers: [],
         date: new Date()
     };
     
     // Add to orders database
     ordersDatabase.push(order);
-    startOrderTracking(order, 0);
+    // Do NOT auto-start tracking - wait for mother to accept
     refreshOrderViews();
     
     // Clear cart
@@ -652,6 +675,7 @@ function placeOrder() {
     
     // Show success message
     showToast(`🎉 Order placed successfully! Total: ₹${total}`);
+    showToast('⏳ Waiting for mother to accept...');
     
     // Refresh mother's dashboard if she's logged in
     if (currentUser.role === 'mother') {
@@ -744,6 +768,11 @@ function getOrCreateMotherKitchen() {
 
 function loadMotherKitchenDetails() {
     const kitchen = getOrCreateMotherKitchen();
+    if (!kitchen) {
+        console.error('Failed to create/fetch mother kitchen');
+        return;
+    }
+    
     const nameEl = document.getElementById('mother-kitchen-name');
     const specialtyEl = document.getElementById('mother-kitchen-specialty');
     const addressEl = document.getElementById('mother-kitchen-address');
@@ -759,8 +788,8 @@ function loadMotherKitchenDetails() {
     if (addressEl) addressEl.value = kitchen.address || '';
     if (distanceEl) distanceEl.value = kitchen.distanceKm || '';
     if (etaEl) etaEl.value = kitchen.avgDeliveryMins || '';
-    if (openEl) openEl.value = kitchen.openTime || '09:00';
-    if (closeEl) closeEl.value = kitchen.closeTime || '21:00';
+    if (openEl) openEl.value = (kitchen.openTime || '09:00').substring(0, 5);
+    if (closeEl) closeEl.value = (kitchen.closeTime || '21:00').substring(0, 5);
     if (tagsEl) tagsEl.value = (kitchen.tags || []).join(', ');
     if (onlineEl) onlineEl.checked = kitchen.isOnline !== false;
 }
@@ -768,21 +797,79 @@ function loadMotherKitchenDetails() {
 function saveKitchenDetails(event) {
     event.preventDefault();
     const kitchen = getOrCreateMotherKitchen();
-    const name = document.getElementById('mother-kitchen-name').value.trim();
-    const specialty = document.getElementById('mother-kitchen-specialty').value.trim();
-    const address = document.getElementById('mother-kitchen-address').value.trim();
-    const distance = parseFloat(document.getElementById('mother-kitchen-distance').value);
-    const eta = parseInt(document.getElementById('mother-kitchen-eta').value, 10);
-    const openTime = document.getElementById('mother-kitchen-open').value || '09:00';
-    const closeTime = document.getElementById('mother-kitchen-close').value || '21:00';
-    const tagsRaw = document.getElementById('mother-kitchen-tags').value;
-    const isOnline = document.getElementById('mother-kitchen-online').checked;
+    if (!kitchen) {
+        showToast('⚠️ Error creating kitchen');
+        return;
+    }
+    
+    const nameEl = document.getElementById('mother-kitchen-name');
+    const specialtyEl = document.getElementById('mother-kitchen-specialty');
+    const addressEl = document.getElementById('mother-kitchen-address');
+    const distanceEl = document.getElementById('mother-kitchen-distance');
+    const etaEl = document.getElementById('mother-kitchen-eta');
+    
+    if (!nameEl || !specialtyEl || !addressEl || !distanceEl || !etaEl) {
+        showToast('⚠️ Form fields not loaded properly');
+        return;
+    }
+    
+    const name = nameEl.value.trim();
+    const specialty = specialtyEl.value.trim();
+    const address = addressEl.value.trim();
+    const distance = parseFloat(distanceEl.value);
+    const eta = parseInt(etaEl.value, 10);
+    let openTime = document.getElementById('mother-kitchen-open').value;
+    let closeTime = document.getElementById('mother-kitchen-close').value;
+    if (!openTime || openTime.trim() === '') openTime = '09:00';
+    if (!closeTime || closeTime.trim() === '') closeTime = '21:00';
+    const tagsEl = document.getElementById('mother-kitchen-tags');
+    const onlineEl = document.getElementById('mother-kitchen-online');
+    
+    if (!tagsEl || !onlineEl) {
+        showToast('⚠️ Form fields not loaded properly');
+        return;
+    }
+    
+    const tagsRaw = tagsEl.value;
+    const isOnline = onlineEl.checked;
+    
+    if (!name) {
+        showToast('⚠️ Kitchen name is required');
+        return;
+    }
+    if (!specialty) {
+        showToast('⚠️ Specialty is required');
+        return;
+    }
+    if (!address) {
+        showToast('⚠️ Address is required');
+        return;
+    }
 
-    kitchen.name = name || kitchen.name;
-    kitchen.specialty = specialty || kitchen.specialty;
-    kitchen.address = address || kitchen.address;
-    if (!isNaN(distance)) kitchen.distanceKm = distance;
-    if (!isNaN(eta)) kitchen.avgDeliveryMins = eta;
+    kitchen.name = name;
+    kitchen.specialty = specialty;
+    kitchen.address = address;
+    if (!isNaN(distance) && distance >= 0) {
+        kitchen.distanceKm = distance;
+    } else {
+        showToast('⚠️ Distance must be a valid positive number');
+        return;
+    }
+    if (!isNaN(eta) && eta >= 5) {
+        kitchen.avgDeliveryMins = eta;
+    } else {
+        showToast('⚠️ Delivery time must be at least 5 minutes');
+        return;
+    }
+    // Validate time format (HH:MM)
+    if (!/^\d{2}:\d{2}$/.test(openTime)) {
+        showToast('⚠️ Invalid open time format (use HH:MM)');
+        return;
+    }
+    if (!/^\d{2}:\d{2}$/.test(closeTime)) {
+        showToast('⚠️ Invalid close time format (use HH:MM)');
+        return;
+    }
     kitchen.openTime = openTime;
     kitchen.closeTime = closeTime;
     kitchen.isOnline = isOnline;
@@ -792,7 +879,21 @@ function saveKitchenDetails(event) {
         .filter(Boolean);
 
     showToast('✅ Kitchen details updated');
+    // Update selectedKitchen if student is viewing this kitchen
+    if (selectedKitchen && selectedKitchen.id === kitchen.id) {
+        selectedKitchen = kitchen;
+    }
     loadKitchensList();
+    // Refresh menu view if visible
+    if (!document.getElementById('menu-view').classList.contains('hidden')) {
+        const isOpen = isKitchenOpen(kitchen);
+        const statusLabel = !kitchen.isOnline ? 'Offline' : isOpen ? 'Open Now' : 'Closed';
+        const openStatus = document.getElementById('kitchen-open-status');
+        if (openStatus) {
+            openStatus.textContent = statusLabel;
+            openStatus.className = `chip ${isOpen ? 'chip-open' : 'chip-closed'}`;
+        }
+    }
     loadMotherMenu();
     loadMotherOrders();
 }
@@ -802,6 +903,10 @@ function saveKitchenDetails(event) {
  */
 function loadMotherMenu() {
     const container = document.getElementById('mother-menu-list');
+    if (!container) {
+        console.warn('mother-menu-list container not found');
+        return;
+    }
     
     // Filter menu items for current mother
     const motherItems = menuItems.filter(item => {
@@ -826,7 +931,7 @@ function loadMotherMenu() {
                 <span class="menu-item-category">${item.category}</span>
             </div>
             <span class="menu-item-price">₹${item.price}</span>
-            <button class="delete-btn" onclick="deleteMenuItem(${item.kitchenId}, '${item.name}')">
+            <button class="delete-btn" onclick="deleteMenuItem(${item.kitchenId}, '${item.name.replace(/'/g, "\\'")}')" title="Delete this item">
                 Delete
             </button>
         `;
@@ -967,12 +1072,12 @@ function loadMotherOrders() {
 }
 
 /**
- * Accepts an order
+ * Accepts an order and starts auto-tracking
  * @param {number} orderId - Order ID
  */
 function acceptOrder(orderId) {
     const order = ordersDatabase.find(o => o.id === orderId);
-    if (order) {
+    if (order && order.status === 'pending') {
         order.status = 'accepted';
         order.statusIndex = ORDER_STEPS.indexOf('accepted');
         order.stepHistory.push({ step: 'accepted', time: new Date() });
