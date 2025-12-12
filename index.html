@@ -3,1045 +3,328 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>माँ का प्यार - Maa Ka Pyaar</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Maa Ka Pyaar - Home Food Delivery</title>
+    
+    <!-- Google Fonts for Professional Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- External CSS Stylesheet -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- ===== LANDING SCREEN ===== -->
-    <div id="role-screen" class="screen active">
-        <header class="main-header">
-            <h1>❤️ माँ का प्यार (Maa Ka Pyaar)</h1>
-            <p>Connecting Home Kitchens with Hungry Hearts</p>
+    <!-- ==================================================================================
+         SCREEN 1: LANDING PAGE - Role Selection
+         Purpose: User chooses if they are a Student (customer) or Mother (cook)
+         Key Elements: Logo, Tagline, Two role cards
+         ================================================================================== -->
+    <div id="landing-screen" class="screen active">
+        <!-- App Logo and Header -->
+        <header class="hero-section">
+            <div class="logo">❤️</div>
+            <h1 class="brand-name">Maa Ka Pyaar</h1>
+            <p class="tagline">Connecting Home Kitchens with Hungry Students</p>
         </header>
-        <div class="role-container">
+
+        <!-- Role Selection Section -->
+        <section class="role-selection">
             <h2>Who are you?</h2>
-            <div class="role-buttons">
-                <button class="btn btn-primary btn-large" onclick="goToLogin('cook')">👩‍🍳 I am a Mother (Cook)</button>
-                <button class="btn btn-primary btn-large" onclick="goToLogin('student')">🧑‍💻 I am a Student</button>
-                <button class="btn btn-primary btn-large" onclick="goToLogin('admin')">👨‍💼 I am an Administrator</button>
+            <div class="role-cards">
+                <!-- Student Card -->
+                <div class="role-card" onclick="selectRole('student')">
+                    <div class="card-icon">🧑‍💻</div>
+                    <h3>I'm a Student</h3>
+                    <p>Order home-cooked food</p>
+                    <button class="card-btn">Continue</button>
+                </div>
+
+                <!-- Mother Card -->
+                <div class="role-card" onclick="selectRole('mother')">
+                    <div class="card-icon">👩‍🍳</div>
+                    <h3>I'm a Mother</h3>
+                    <p>Share your delicious cooking</p>
+                    <button class="card-btn">Continue</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ==================================================================================
+         SCREEN 2: LOGIN SCREEN
+         Purpose: Simple login for both students and mothers
+         Key Elements: Name input, Mobile number input, Login button
+         ================================================================================== -->
+    <div id="login-screen" class="screen">
+        <div class="login-container">
+            <!-- Login Card -->
+            <div class="login-card">
+                <div class="login-header">
+                    <h2 id="login-title">Welcome!</h2>
+                    <p>Enter your details to continue</p>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <!-- Name Field -->
+                    <div class="input-group">
+                        <label for="userName">Full Name</label>
+                        <input 
+                            type="text" 
+                            id="userName" 
+                            placeholder="Enter your name" 
+                            required>
+                    </div>
+
+                    <!-- Mobile Field -->
+                    <div class="input-group">
+                        <label for="userMobile">Mobile Number</label>
+                        <input 
+                            type="tel" 
+                            id="userMobile" 
+                            placeholder="10-digit mobile number" 
+                            pattern="[0-9]{10}"
+                            required>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary">
+                        Continue to Dashboard
+                    </button>
+                </form>
+
+                <!-- Back Link -->
+                <p class="back-link">
+                    <a href="#" onclick="showScreen('landing'); return false;">← Back to Home</a>
+                </p>
             </div>
         </div>
     </div>
 
-    <!-- ===== AUTH SCREEN ===== -->
-    <div id="auth-screen" class="screen">
-        <div class="auth-card">
-            <h2 id="auth-title">Create Account</h2>
-            <p class="subtitle">Enter your details to continue.</p>
-            
-            <form id="detailsForm" onsubmit="handleLogin(event)">
-                <input type="text" id="u_name" placeholder="Your Name (e.g. Suman)" required>
-                <input type="tel" id="u_mobile" placeholder="Mobile Number" required>
-                <button type="submit" class="btn btn-primary full-width">Enter Dashboard</button>
-            </form>
-            
-            <button class="btn btn-text" onclick="showScreen('role')">Back</button>
-        </div>
-    </div>
-
-    <!-- ===== MOTHER DASHBOARD ===== -->
-    <div id="mother-dashboard-screen" class="screen">
-        <nav class="student-nav" style="border-bottom: 4px solid var(--warm-yellow);">
-            <div class="nav-brand">👩‍🍳 My Kitchen Control</div>
-            <div class="nav-icons">
-                <button class="btn btn-small" onclick="showScreen('mother-history')">📜 Order History</button>
-                <button class="btn btn-small" onclick="openSupportForm()">🎧 Support</button>
-                <span>Welcome, <b id="mom-name-display">Mother</b></span>
-                <button class="btn btn-small btn-secondary" onclick="logout()">Logout</button>
-            </div>
-        </nav>
-
-        <div class="container main-layout">
-            <!-- LEFT COLUMN: Orders & Profile -->
-            <div class="menu-section">
-                
-                <!-- Incoming Orders Panel -->
-                <div class="card orders-panel">
-                    <h3>🔔 Incoming Orders</h3>
-                    <div id="motherOrderList" class="orders-list">
-                        <p class="empty-state">No orders yet. Waiting for students...</p>
-                    </div>
-                </div>
-
-                <!-- ===== KITCHEN PROFILE MANAGEMENT SECTION ===== -->
-                <div class="profile-management-card">
-                    <div class="card-header">
-                        <h3>🏠 Kitchen Profile Management</h3>
-                        <p class="card-subtitle">Manage your restaurant information and branding</p>
-                    </div>
-                    
-                    <div class="profile-form-section">
-                        <div class="form-group">
-                            <label class="form-label" for="kitchenNameInput">
-                                <span class="label-icon">🏪</span>
-                                Restaurant Name
-                            </label>
-                            <input type="text" id="kitchenNameInput" class="form-input" placeholder="Enter your restaurant name">
-                            <small class="form-help">This name will be displayed to customers</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="kitchenSpecInput">
-                                <span class="label-icon">🍽️</span>
-                                Cuisine Specialty
-                            </label>
-                            <input type="text" id="kitchenSpecInput" class="form-input" placeholder="e.g., North Indian, South Indian, Chinese">
-                            <small class="form-help">Describe your cooking style or specialty</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="kitchenDescInput">
-                                <span class="label-icon">📝</span>
-                                Kitchen Description
-                            </label>
-                            <textarea id="kitchenDescInput" class="form-textarea" rows="3" placeholder="Tell customers about your kitchen, cooking style, and what makes your food special..."></textarea>
-                            <small class="form-help">Optional: Add a personal touch to attract customers</small>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button class="btn btn-primary" onclick="saveKitchenProfile()">
-                                <span class="btn-icon">💾</span>
-                                Update Profile
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetProfileForm()">
-                                <span class="btn-icon">🔄</span>
-                                Reset
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ===== KITCHEN TIMING MANAGEMENT SECTION ===== -->
-                <div class="timing-management-card">
-                    <div class="card-header">
-                        <h3>⏰ Kitchen Timing Management</h3>
-                        <p class="card-subtitle">Control when your kitchen accepts orders</p>
-                    </div>
-                    
-                    <div class="timing-form-section">
-                        <!-- Current Status Display -->
-                        <div class="current-status-display" id="kitchenStatusDisplay">
-                            <div class="status-indicator" id="statusIndicator">
-                                <span class="status-dot" id="statusDot"></span>
-                                <span class="status-text" id="statusText">Checking...</span>
-                            </div>
-                            <div class="status-details" id="statusDetails">
-                                <span id="timingDetails">Loading timing information...</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Timing Mode Selection -->
-                        <div class="timing-mode-section">
-                            <h4 class="section-title">Timing Mode</h4>
-                            <div class="timing-mode-options">
-                                <label class="timing-option">
-                                    <input type="radio" name="timingMode" value="auto" id="autoTimingRadio" onchange="setTimingMode('auto')">
-                                    <div class="option-content">
-                                        <div class="option-header">
-                                            <span class="option-icon">🤖</span>
-                                            <span class="option-title">Automatic Timing</span>
-                                        </div>
-                                        <p class="option-description">Kitchen opens at 9:00 AM and closes at 9:00 PM daily</p>
-                                    </div>
-                                </label>
-                                
-                                <label class="timing-option">
-                                    <input type="radio" name="timingMode" value="manual" id="manualTimingRadio" onchange="setTimingMode('manual')">
-                                    <div class="option-content">
-                                        <div class="option-header">
-                                            <span class="option-icon">⚙️</span>
-                                            <span class="option-title">Custom Timing</span>
-                                        </div>
-                                        <p class="option-description">Set your own opening and closing hours</p>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Manual Timing Settings -->
-                        <div class="manual-timing-section" id="manualTimingSection">
-                            <h4 class="section-title">Custom Hours</h4>
-                            <div class="time-inputs-row">
-                                <div class="form-group">
-                                    <label class="form-label" for="openingTime">
-                                        <span class="label-icon">🌅</span>
-                                        Opening Time
-                                    </label>
-                                    <input type="time" id="openingTime" class="form-input time-input" value="09:00">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label" for="closingTime">
-                                        <span class="label-icon">🌙</span>
-                                        Closing Time
-                                    </label>
-                                    <input type="time" id="closingTime" class="form-input time-input" value="21:00">
-                                </div>
-                            </div>
-                            <small class="form-help">Set your daily operating hours</small>
-                        </div>
-                        
-                        <!-- Manual Override Section -->
-                        <div class="manual-override-section">
-                            <h4 class="section-title">Quick Controls</h4>
-                            <div class="override-controls">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="kitchenOpenCheckbox" onchange="toggleKitchenStatus()">
-                                    <span class="toggle-slider"></span>
-                                    <span class="toggle-label">Kitchen is Currently Open</span>
-                                </label>
-                                <small class="form-help">Override automatic timing temporarily</small>
-                            </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button class="btn btn-primary" onclick="saveKitchenTiming()">
-                                <span class="btn-icon">💾</span>
-                                Save Timing Settings
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetTimingToDefaults()">
-                                <span class="btn-icon">🔄</span>
-                                Reset to Defaults
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RIGHT COLUMN: Menu Management -->
-            <div class="cart-section">
-                <div class="cart-card">
-                    <h3>🍲 Manage Menu</h3>
-                    <div class="add-menu-form">
-                        <h4 style="margin-bottom: 10px;">+ Add New Item</h4>
-                        <select id="newItemCategory">
-                            <option value="breakfast">Breakfast</option>
-                            <option value="lunch">Lunch</option>
-                            <option value="snack">Snacks</option>
-                            <option value="dinner">Dinner</option>
-                        </select>
-                        <input type="text" id="newItemName" placeholder="Item Name (e.g. Poha)">
-                        <input type="number" id="newItemPrice" placeholder="Price (₹)">
-                        
-                        <label class="small-label">Item Image (Optional)</label>
-                        <input type="file" id="newItemImage" accept="image/*" onchange="previewImage(event)">
-                        <div id="imagePreview" style="display: none; margin: 10px 0;">
-                            <img id="previewImg" style="max-width: 100%; max-height: 150px; border-radius: 8px; object-fit: cover;">
-                        </div>
-                        
-                        <button class="btn btn-primary full-width" onclick="addMyMenuItem()">Add to Menu</button>
-                    </div>
-
-                    <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ddd;">
-
-                    <h4>Active Menu:</h4>
-                    <ul id="myMenuList" class="cart-list" style="max-height: 400px;"></ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== STUDENT DASHBOARD ===== -->
+    <!-- ==================================================================================
+         SCREEN 3: STUDENT DASHBOARD
+         Purpose: Students browse kitchens, view menus, add to cart, place orders
+         Key Elements: Navigation bar, Kitchen list, Menu display, Shopping cart
+         ================================================================================== -->
     <div id="student-dashboard-screen" class="screen">
-        <nav class="student-nav">
-            <div class="nav-brand">❤️ माँ का प्यार</div>
-            <div class="nav-icons">
-                <button class="btn btn-small" onclick="showScreen('student-history')">📜 My Orders</button>
-                <button class="btn btn-small" onclick="openSupportForm()">🎧 Support</button>
-                <div class="icon-wrap" onclick="toggleNotifications()">
-                    🔔 <span id="notif-badge" class="badge" style="display:none">0</span>
-                    <div id="notif-dropdown" class="dropdown hidden">
-                        <h4>Notifications</h4>
-                        <ul id="notif-list"><li class="empty-state">No new alerts</li></ul>
-                    </div>
-                </div>
-                <div class="icon-wrap" onclick="scrollToCart()">
-                    🛒 <span id="cart-count" class="badge">0</span>
-                </div>
-                <button class="btn btn-small" onclick="logout()">Logout</button>
+        <!-- Top Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="nav-logo">❤️</span>
+                <span class="nav-title">Maa Ka Pyaar</span>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-btn" onclick="showScreen('student-orders')">📋 My Orders</button>
+                <button class="nav-btn cart-btn" onclick="toggleCart()">
+                    🛒 Cart <span id="cart-badge" class="badge">0</span>
+                </button>
+                <button class="nav-btn" onclick="logout()">Logout</button>
             </div>
         </nav>
 
-        <div class="container main-layout">
-            <div class="menu-section">
-
-                <!-- Kitchen List -->
-                <div id="kitchens-list-view">
-                    <h3 class="section-title">🏠 Select a Mother's Kitchen</h3>
-                    <div id="kitchensGrid" class="kitchen-grid"></div>
+        <!-- Main Content Area -->
+        <div class="dashboard-content">
+            <!-- LEFT SIDE: Kitchen List and Menu -->
+            <div class="main-section">
+                
+                <!-- View 1: Kitchen List (Default View) -->
+                <div id="kitchen-list-view">
+                    <h2 class="section-title">🏠 Available Kitchens</h2>
+                    <div id="kitchens-container" class="kitchens-grid">
+                        <!-- Kitchens will be loaded here by JavaScript -->
+                    </div>
                 </div>
 
-                <!-- Single Menu -->
-                <div id="single-kitchen-view" class="hidden">
-                    <button class="btn-text back-btn" onclick="backToKitchens()">← Back to Kitchens</button>
-                    <div class="kitchen-header">
-                        <h2 id="activeKitchenName">Kitchen Name</h2>
-                        <span id="activeKitchenRating" class="rating">⭐ 5.0</span>
+                <!-- View 2: Menu View (Shown when kitchen is selected) -->
+                <div id="menu-view" class="hidden">
+                    <button class="back-btn" onclick="backToKitchens()">← Back to Kitchens</button>
+                    
+                    <div class="kitchen-info">
+                        <h2 id="selected-kitchen-name">Kitchen Name</h2>
+                        <p id="selected-kitchen-specialty">Specialty</p>
+                        <span id="selected-kitchen-rating" class="rating">⭐ 5.0</span>
                     </div>
-                    <div class="tabs">
-                        <button class="tab-btn active" onclick="filterMenu('breakfast')">Breakfast</button>
-                        <button class="tab-btn" onclick="filterMenu('lunch')">Lunch</button>
-                        <button class="tab-btn" onclick="filterMenu('snack')">Snacks</button>
-                        <button class="tab-btn" onclick="filterMenu('dinner')">Dinner</button>
+
+                    <!-- Menu Category Tabs -->
+                    <div class="menu-tabs">
+                        <button class="tab-btn active" onclick="filterMenu('breakfast')">🌅 Breakfast</button>
+                        <button class="tab-btn" onclick="filterMenu('lunch')">🍱 Lunch</button>
+                        <button class="tab-btn" onclick="filterMenu('snacks')">🍪 Snacks</button>
+                        <button class="tab-btn" onclick="filterMenu('dinner')">🌙 Dinner</button>
                     </div>
-                    <div id="studentMenuList" class="food-grid"></div>
+
+                    <!-- Food Items Grid -->
+                    <div id="menu-items-container" class="menu-grid">
+                        <!-- Menu items will be loaded here by JavaScript -->
+                    </div>
                 </div>
             </div>
 
-            <div class="cart-section" id="cart-anchor">
+            <!-- RIGHT SIDE: Shopping Cart (Sticky Sidebar) -->
+            <aside class="cart-sidebar" id="cart-sidebar">
                 <div class="cart-card">
-                    <h3>🛒 Your Plate</h3>
-                    <ul id="cartList" class="cart-list"><li class="empty-state">Plate is empty</li></ul>
-                    <div class="cart-total">Total: ₹<span id="cartTotal">0</span></div>
-                    <button class="btn btn-primary full-width" onclick="placeOrder()">Place Order</button>
+                    <h3>🛒 Your Cart</h3>
+                    <div id="cart-items-list" class="cart-items">
+                        <p class="empty-message">Your cart is empty</p>
+                    </div>
+                    
+                    <!-- Cart Summary -->
+                    <div class="cart-summary">
+                        <div class="summary-row">
+                            <span>Items:</span>
+                            <span id="cart-item-count">0</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total:</span>
+                            <span>₹<span id="cart-total">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Place Order Button -->
+                    <button class="btn btn-primary btn-block" onclick="placeOrder()" id="place-order-btn" disabled>
+                        Place Order
+                    </button>
                 </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- ==================================================================================
+         SCREEN 4: STUDENT ORDERS HISTORY
+         Purpose: Students view their past and current orders
+         Key Elements: Order list with status badges
+         ================================================================================== -->
+    <div id="student-orders-screen" class="screen">
+        <!-- Top Navigation -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="nav-logo">❤️</span>
+                <span class="nav-title">My Orders</span>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-btn" onclick="showScreen('student-dashboard')">← Back</button>
+                <button class="nav-btn" onclick="logout()">Logout</button>
+            </div>
+        </nav>
+
+        <!-- Orders List -->
+        <div class="orders-container">
+            <h2 class="section-title">📋 Order History</h2>
+            <div id="student-orders-list" class="orders-list">
+                <p class="empty-message">No orders yet. Start ordering delicious food!</p>
             </div>
         </div>
     </div>
 
-    <!-- ===== CHECKOUT SCREEN ===== -->
-    <div id="checkout-screen" class="screen">
-        <nav class="student-nav">
-            <div class="nav-brand">❤️ माँ का प्यार - Checkout</div>
-            <div class="nav-icons">
-                <button class="btn btn-small" onclick="backToCart()">← Back to Cart</button>
+    <!-- ==================================================================================
+         SCREEN 5: MOTHER DASHBOARD
+         Purpose: Mothers manage their menu and view incoming orders
+         Key Elements: Menu management form, Menu list, Incoming orders panel
+         ================================================================================== -->
+    <div id="mother-dashboard-screen" class="screen">
+        <!-- Top Navigation -->
+        <nav class="navbar mother-nav">
+            <div class="nav-brand">
+                <span class="nav-logo">👩‍🍳</span>
+                <span class="nav-title">My Kitchen</span>
+            </div>
+            <div class="nav-menu">
+                <span class="welcome-text">Welcome, <strong id="mother-name">Mother</strong></span>
+                <button class="nav-btn" onclick="showScreen('mother-orders')">📜 Order History</button>
+                <button class="nav-btn" onclick="logout()">Logout</button>
             </div>
         </nav>
 
-        <div class="container">
-            <div class="checkout-layout">
-                <!-- LEFT: Forms -->
-                <div class="checkout-forms">
-                    <div class="checkout-card">
-                        <h3>📍 Delivery Address</h3>
-                        <input type="text" id="deliveryName" placeholder="Full Name" required>
-                        <input type="tel" id="deliveryPhone" placeholder="Phone Number" required>
-                        <textarea id="deliveryAddress" placeholder="Full Address (Street, City, Pincode)" rows="3" required></textarea>
-                    </div>
-
-                    <div class="checkout-card">
-                        <h3>💳 Payment Details</h3>
-                        <input type="text" id="cardNumber" placeholder="Card Number (e.g., 1234 5678 9012 3456)" required>
-                        <input type="text" id="cardExpiry" placeholder="Expiry (MM/YY)" required>
-                        <input type="text" id="cardCVV" placeholder="CVV" required>
-                        <input type="text" id="cardName" placeholder="Name on Card" required>
-                    </div>
-                </div>
-
-                <!-- RIGHT: Order Summary -->
-                <div class="checkout-summary">
-                    <div class="checkout-card">
-                        <h3>📋 Order Summary</h3>
-                        <div id="checkoutItems" class="summary-items"></div>
-                        <hr>
-                        <div class="summary-line"><span>Subtotal:</span> ₹<span id="checkoutSubtotal">0</span></div>
-                        <div class="summary-line"><span>Delivery Fee:</span> ₹<span id="checkoutDelivery">50</span></div>
-                        <div class="summary-line"><span>Tax (5%):</span> ₹<span id="checkoutTax">0</span></div>
-                        <hr>
-                        <div class="summary-total"><strong>Total: ₹<span id="checkoutTotal">0</span></strong></div>
-                        <button class="btn btn-primary full-width" onclick="confirmPayment()">Pay Now</button>
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- LEFT: Incoming Orders -->
+            <div class="main-section">
+                <div class="card">
+                    <h3>🔔 Incoming Orders</h3>
+                    <div id="mother-orders-list" class="orders-list">
+                        <p class="empty-message">No new orders yet</p>
                     </div>
                 </div>
             </div>
+
+            <!-- RIGHT: Menu Management -->
+            <aside class="cart-sidebar">
+                <div class="cart-card">
+                    <h3>📝 Manage Menu</h3>
+                    
+                    <!-- Add New Item Form -->
+                    <form id="add-menu-form" onsubmit="addMenuItem(event)">
+                        <div class="input-group">
+                            <label for="item-category">Category</label>
+                            <select id="item-category" required>
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="snacks">Snacks</option>
+                                <option value="dinner">Dinner</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="item-name">Item Name</label>
+                            <input type="text" id="item-name" placeholder="e.g., Poha, Dal Rice" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="item-price">Price (₹)</label>
+                            <input type="number" id="item-price" placeholder="50" min="1" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            ➕ Add to Menu
+                        </button>
+                    </form>
+
+                    <!-- Current Menu Items -->
+                    <div class="menu-divider"></div>
+                    <h4>Current Menu:</h4>
+                    <div id="mother-menu-list" class="menu-list">
+                        <p class="empty-message">No items added yet</p>
+                    </div>
+                </div>
+            </aside>
         </div>
     </div>
 
-    <!-- ===== ORDER HISTORY SCREENS ===== -->
-    <div id="mother-history-screen" class="screen">
-        <nav class="student-nav" style="border-bottom: 4px solid var(--warm-yellow);">
-            <div class="nav-brand">👩‍🍳 Order History</div>
-            <div class="nav-icons">
-                <button class="btn btn-small" onclick="showScreen('mother-dashboard')">← Back to Dashboard</button>
-                <button class="btn btn-small btn-secondary" onclick="logout()">Logout</button>
+    <!-- ==================================================================================
+         SCREEN 6: MOTHER ORDERS HISTORY
+         Purpose: Mothers view all past orders
+         Key Elements: Complete order history with details
+         ================================================================================== -->
+    <div id="mother-orders-screen" class="screen">
+        <!-- Top Navigation -->
+        <nav class="navbar mother-nav">
+            <div class="nav-brand">
+                <span class="nav-logo">👩‍🍳</span>
+                <span class="nav-title">Order History</span>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-btn" onclick="showScreen('mother-dashboard')">← Back</button>
+                <button class="nav-btn" onclick="logout()">Logout</button>
             </div>
         </nav>
 
-        <div class="container">
+        <!-- Orders List -->
+        <div class="orders-container">
             <h2 class="section-title">📜 All Orders</h2>
-            <div id="motherHistoryList" class="history-container">
-                <p class="empty-state">No orders yet.</p>
+            <div id="mother-orders-history" class="orders-list">
+                <p class="empty-message">No orders yet</p>
             </div>
         </div>
     </div>
 
-    <div id="student-history-screen" class="screen">
-        <nav class="student-nav">
-            <div class="nav-brand">❤️ My Orders</div>
-            <div class="nav-icons">
-                <button class="btn btn-small" onclick="showScreen('student-dashboard')">← Back to Dashboard</button>
-                <button class="btn btn-small" onclick="logout()">Logout</button>
-            </div>
-        </nav>
-
-        <div class="container">
-            <h2 class="section-title">📜 Order History</h2>
-            <div id="studentHistoryList" class="history-container">
-                <p class="empty-state">No orders yet.</p>
-            </div>
-        </div>
+    <!-- ==================================================================================
+         SUCCESS MESSAGE POPUP
+         Purpose: Shows confirmation messages (order placed, item added, etc.)
+         ================================================================================== -->
+    <div id="toast-notification" class="toast">
+        <span id="toast-message">Message</span>
     </div>
 
-2    <!-- ===== ADMIN DASHBOARD ===== -->
-    <div id="admin-dashboard-screen" class="screen">
-        <nav class="student-nav" style="border-bottom: 4px solid var(--info-blue);">
-            <div class="nav-brand">👨‍💼 Admin Dashboard</div>
-            <div class="nav-icons">
-                <button class="btn btn-small" onclick="showAdminSection('refunds')">💰 Refunds</button>
-                <button class="btn btn-small" onclick="showAdminSection('support')">🎧 Support</button>
-                <button class="btn btn-small" onclick="showAdminSection('analytics')">📊 Analytics</button>
-                <button class="btn btn-small" onclick="showAdminSection('users')">👥 Users</button>
-                <span>Welcome, <b id="admin-name-display">Admin</b></span>
-                <button class="btn btn-small btn-secondary" onclick="logout()">Logout</button>
-            </div>
-        </nav>
-
-        <div class="container">
-            <!-- Refund Management Section -->
-            <div id="admin-refunds-section" class="admin-section">
-                <h2 class="section-title">💰 Refund Management</h2>
-                
-                <div class="admin-stats">
-                    <div class="stat-card">
-                        <h3 id="pending-refunds-count">0</h3>
-                        <p>Pending Refunds</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="total-refund-amount">₹0</h3>
-                        <p>Total Refund Amount</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="processed-refunds-count">0</h3>
-                        <p>Processed Today</p>
-                    </div>
-                </div>
-
-                <div class="refund-requests-panel">
-                    <h3>🔔 Pending Refund Requests</h3>
-                    <div id="adminRefundList" class="orders-list">
-                        <p class="empty-state">No pending refund requests.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Support Management Section -->
-            <div id="admin-support-section" class="admin-section hidden">
-                <h2 class="section-title">🎧 Customer Support</h2>
-                
-                <div class="admin-stats">
-                    <div class="stat-card">
-                        <h3 id="open-tickets-count">0</h3>
-                        <p>Open Tickets</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="avg-response-time">0h</h3>
-                        <p>Avg Response Time</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="resolved-tickets-count">0</h3>
-                        <p>Resolved Today</p>
-                    </div>
-                </div>
-
-                <div class="support-tickets-panel">
-                    <h3>🎫 Support Tickets</h3>
-                    <div id="adminSupportList" class="orders-list">
-                        <p class="empty-state">No support tickets.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Analytics Section -->
-            <div id="admin-analytics-section" class="admin-section hidden">
-                <h2 class="section-title">📊 Platform Analytics</h2>
-                
-                <div class="admin-stats">
-                    <div class="stat-card">
-                        <h3 id="total-orders-count">0</h3>
-                        <p>Total Orders</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="total-revenue">₹0</h3>
-                        <p>Total Revenue</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="active-kitchens-count">0</h3>
-                        <p>Active Kitchens</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="total-users-count">0</h3>
-                        <p>Total Users</p>
-                    </div>
-                </div>
-
-                <div class="analytics-charts">
-                    <div class="chart-card">
-                        <h3>📈 Orders This Week</h3>
-                        <div id="ordersChart" class="chart-placeholder">
-                            <p>Chart visualization would go here</p>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <h3>�  Revenue Trends</h3>
-                        <div id="revenueChart" class="chart-placeholder">
-                            <p>Revenue chart would go here</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- User Management Section -->
-            <div id="admin-users-section" class="admin-section hidden">
-                <h2 class="section-title">👥 User Management</h2>
-                
-                <div class="user-management-panel">
-                    <h3>👨‍🍳 Registered Cooks</h3>
-                    <div id="adminCooksList" class="users-list">
-                        <p class="empty-state">No registered cooks.</p>
-                    </div>
-                </div>
-
-                <div class="user-management-panel">
-                    <h3>🧑‍💻 Registered Students</h3>
-                    <div id="adminStudentsList" class="users-list">
-                        <p class="empty-state">No registered students.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== MODALS ===== -->
-    
-    <!-- Support Form Modal -->
-    <div id="supportFormModal" class="modal">
-        <div class="modal-content">
-            <h3>🎧 Contact Support</h3>
-            <form id="supportForm" onsubmit="submitSupportTicket(event)">
-                <label class="small-label">Subject</label>
-                <input type="text" id="supportSubject" placeholder="Brief description of your issue" required>
-                
-                <label class="small-label">Priority</label>
-                <select id="supportPriority">
-                    <option value="Low">Low</option>
-                    <option value="Medium" selected>Medium</option>
-                    <option value="High">High</option>
-                </select>
-                
-                <label class="small-label">Description</label>
-                <textarea id="supportDescription" placeholder="Please describe your issue in detail..." rows="5" required></textarea>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-text" onclick="closeSupportForm()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit Ticket</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Support Ticket Modal -->
-    <div id="supportTicketModal" class="modal">
-        <div class="modal-content">
-            <h3>🎫 Support Ticket Details</h3>
-            <div id="ticketDetails">
-                <!-- Ticket details will be populated here -->
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-text" onclick="closeSupportModal()">Close</button>
-                <button class="btn btn-primary" onclick="respondToTicket()">Respond</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Food Item Modal -->
-    <div id="customModal" class="modal">
-        <div class="modal-content">
-            <h3>Add to Plate</h3>
-            <p id="modalFoodName" class="highlight-text">Food Name</p>
-            <p id="modalFoodPrice" style="color: #2E7D32; font-weight: bold; font-size: 1.1em; margin: 10px 0;">₹<span id="modalPrice">0</span></p>
-            
-            <label class="small-label">Quantity</label>
-            <div class="quantity-selector">
-                <button class="qty-btn" onclick="decreaseQuantity()">−</button>
-                <input type="number" id="itemQuantity" value="1" min="1" max="10" readonly>
-                <button class="qty-btn" onclick="increaseQuantity()">+</button>
-            </div>
-            
-            <label class="small-label" style="margin-top: 15px;">Special Request (Optional)</label>
-            <input type="text" id="customNote" placeholder="Any special request?">
-            
-            <div class="modal-total">
-                <span>Total:</span>
-                <span id="modalTotal">₹0</span>
-            </div>
-            
-            <div class="modal-actions">
-                <button class="btn btn-text" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="confirmAddToCart()">Add to Cart</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // DIRECT FUNCTION DEFINITIONS - GUARANTEED TO WORK
-        console.log('🔧 Loading direct functions...');
-        
-        // Global state
-        let currentUser = { name: '', role: '', mobile: '' };
-        let currentKitchen = null;
-        
-        // Core functions defined directly in HTML
-        function goToLogin(role) {
-            console.log('🚀 goToLogin called with role:', role);
-            
-            currentUser.role = role;
-            let title = "Login";
-            
-            if (role === 'cook') title = "👩‍🍳 Mother Login";
-            else if (role === 'student') title = "🧑‍💻 Student Login";
-            else if (role === 'admin') title = "👨‍💼 Administrator Login";
-            
-            const authTitle = document.getElementById('auth-title');
-            if (authTitle) {
-                authTitle.innerText = title;
-            }
-            
-            showScreen('auth');
-        }
-        
-        function showScreen(id) {
-            console.log('🔄 Switching to screen:', id);
-            
-            // Hide all screens
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            
-            // Show target screen
-            const targetId = id.endsWith('-screen') ? id : id + '-screen';
-            const el = document.getElementById(targetId);
-            
-            if (el) {
-                el.classList.add('active');
-                console.log('✅ Screen switched to:', targetId);
-            } else {
-                console.error('❌ Screen not found:', targetId);
-            }
-        }
-        
-        function handleLogin(e) {
-            e.preventDefault();
-            console.log('📝 handleLogin called');
-            
-            const name = document.getElementById('u_name').value;
-            const mobile = document.getElementById('u_mobile').value;
-            
-            if (!name || !mobile) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            currentUser.name = name;
-            currentUser.mobile = mobile;
-            
-            // Update name displays
-            const momNameDisplay = document.getElementById('mom-name-display');
-            const adminNameDisplay = document.getElementById('admin-name-display');
-            
-            if (currentUser.role === 'cook') {
-                console.log('✅ Logging in as Cook:', name);
-                if (momNameDisplay) momNameDisplay.innerText = name;
-                
-                // Create a basic kitchen for the cook
-                currentKitchen = {
-                    id: Date.now(),
-                    name: name + "'s Kitchen",
-                    ownerName: name,
-                    specialty: "Home Food",
-                    description: "Delicious home-cooked meals made with love.",
-                    isOpen: true,
-                    autoTiming: true,
-                    openingTime: "09:00",
-                    closingTime: "21:00"
-                };
-                
-                showScreen('mother-dashboard');
-                
-                // Initialize timing settings after screen is shown
-                setTimeout(function() {
-                    initializeKitchenTiming();
-                }, 100);
-                
-            } else if (currentUser.role === 'student') {
-                console.log('✅ Logging in as Student:', name);
-                showScreen('student-dashboard');
-                
-            } else if (currentUser.role === 'admin') {
-                console.log('✅ Logging in as Admin:', name);
-                if (adminNameDisplay) adminNameDisplay.innerText = name;
-                showScreen('admin-dashboard');
-            }
-            
-            console.log('🎉 Login completed successfully for:', currentUser.role);
-        }
-        
-        function logout() {
-            currentUser = { name: '', role: '', mobile: '' };
-            showScreen('role');
-            const form = document.getElementById('detailsForm');
-            if (form) form.reset();
-        }
-        
-        // Make functions globally available
-        window.goToLogin = goToLogin;
-        window.showScreen = showScreen;
-        window.handleLogin = handleLogin;
-        window.logout = logout;
-        
-        // Kitchen Profile Management Functions
-        function saveKitchenProfile() {
-            const nameInput = document.getElementById('kitchenNameInput');
-            const specialtyInput = document.getElementById('kitchenSpecInput');
-            const descriptionInput = document.getElementById('kitchenDescInput');
-            
-            if (!nameInput || !specialtyInput) {
-                alert('Form elements not found');
-                return;
-            }
-            
-            const name = nameInput.value.trim();
-            const specialty = specialtyInput.value.trim();
-            const description = descriptionInput.value.trim();
-            
-            if (!name || !specialty) {
-                alert('Please fill in restaurant name and specialty');
-                return;
-            }
-            
-            if (currentKitchen) {
-                currentKitchen.name = name;
-                currentKitchen.specialty = specialty;
-                currentKitchen.description = description;
-                
-                alert('✅ Kitchen profile updated successfully!\n\nName: ' + name + '\nSpecialty: ' + specialty + '\nDescription: ' + description);
-            } else {
-                alert('No kitchen found. Please login as a cook first.');
-            }
-        }
-        
-        function resetProfileForm() {
-            if (currentKitchen) {
-                const nameInput = document.getElementById('kitchenNameInput');
-                const specialtyInput = document.getElementById('kitchenSpecInput');
-                const descriptionInput = document.getElementById('kitchenDescInput');
-                
-                if (nameInput) nameInput.value = currentKitchen.name || '';
-                if (specialtyInput) specialtyInput.value = currentKitchen.specialty || '';
-                if (descriptionInput) descriptionInput.value = currentKitchen.description || '';
-                
-                alert('Form reset to saved values');
-            }
-        }
-        
-        // Kitchen Timing Management Functions
-        function setTimingMode(mode) {
-            console.log('🕒 Setting timing mode to:', mode);
-            
-            const manualSection = document.getElementById('manualTimingSection');
-            const autoRadio = document.getElementById('autoTimingRadio');
-            const manualRadio = document.getElementById('manualTimingRadio');
-            
-            if (!manualSection) {
-                alert('Manual timing section not found');
-                return;
-            }
-            
-            if (mode === 'auto') {
-                // Hide manual timing section
-                manualSection.style.display = 'none';
-                
-                if (currentKitchen) {
-                    currentKitchen.autoTiming = true;
-                    currentKitchen.openingTime = "09:00";
-                    currentKitchen.closingTime = "21:00";
-                }
-                
-                // Update time inputs to show auto values
-                const openingTime = document.getElementById('openingTime');
-                const closingTime = document.getElementById('closingTime');
-                if (openingTime) openingTime.value = "09:00";
-                if (closingTime) closingTime.value = "21:00";
-                
-                updateKitchenStatusDisplay();
-                alert('✅ Automatic timing enabled!\n\nYour kitchen will:\n• Open at 9:00 AM\n• Close at 9:00 PM\n• Automatically manage status');
-                
-            } else if (mode === 'manual') {
-                // Show manual timing section
-                manualSection.style.display = 'block';
-                
-                if (currentKitchen) {
-                    currentKitchen.autoTiming = false;
-                    // Keep existing times or set defaults
-                    if (!currentKitchen.openingTime) currentKitchen.openingTime = "09:00";
-                    if (!currentKitchen.closingTime) currentKitchen.closingTime = "21:00";
-                }
-                
-                // Update time inputs with current values
-                const openingTime = document.getElementById('openingTime');
-                const closingTime = document.getElementById('closingTime');
-                if (openingTime && currentKitchen) openingTime.value = currentKitchen.openingTime;
-                if (closingTime && currentKitchen) closingTime.value = currentKitchen.closingTime;
-                
-                updateKitchenStatusDisplay();
-                alert('✅ Custom timing mode enabled!\n\nYou can now:\n• Set your own opening hours\n• Set your own closing hours\n• Manually control kitchen status');
-            }
-        }
-        function toggleKitchenStatus() {
-            console.log('🔄 Toggling kitchen status');
-            
-            const checkbox = document.getElementById('kitchenOpenCheckbox');
-            if (!checkbox) {
-                alert('Kitchen status checkbox not found');
-                return;
-            }
-            
-            if (currentKitchen) {
-                currentKitchen.isOpen = checkbox.checked;
-                
-                const status = currentKitchen.isOpen ? 'OPEN' : 'CLOSED';
-                const message = currentKitchen.autoTiming 
-                    ? `Kitchen is now ${status}\n\nNote: This is a manual override. The kitchen will revert to automatic timing at the next scheduled time.`
-                    : `Kitchen is now ${status}`;
-                
-                updateKitchenStatusDisplay();
-                alert('✅ ' + message);
-            } else {
-                alert('No kitchen found. Please login as a cook first.');
-            }
-        }
-        
-        function saveKitchenTiming() {
-            console.log('💾 Saving kitchen timing settings');
-            
-            if (!currentKitchen) {
-                alert('No kitchen found. Please login as a cook first.');
-                return;
-            }
-            
-            if (!currentKitchen.autoTiming) {
-                // Manual timing - validate and save custom hours
-                const openingTime = document.getElementById('openingTime');
-                const closingTime = document.getElementById('closingTime');
-                
-                if (!openingTime || !closingTime) {
-                    alert('Time input fields not found');
-                    return;
-                }
-                
-                const openTime = openingTime.value;
-                const closeTime = closingTime.value;
-                
-                if (!openTime || !closeTime) {
-                    alert('Please set both opening and closing times');
-                    return;
-                }
-                
-                // Validate that opening time is before closing time
-                if (openTime >= closeTime) {
-                    alert('Opening time must be before closing time');
-                    return;
-                }
-                
-                currentKitchen.openingTime = openTime;
-                currentKitchen.closingTime = closeTime;
-                
-                updateKitchenStatusDisplay();
-                alert('✅ Custom timing saved successfully!\n\nOpening Time: ' + openTime + '\nClosing Time: ' + closeTime + '\n\nYour kitchen will now operate according to these hours.');
-            } else {
-                // Auto timing
-                alert('✅ Automatic timing confirmed!\n\nYour kitchen operates:\n• 9:00 AM - 9:00 PM daily\n• Automatic status management');
-            }
-        }
-        
-        function resetTimingToDefaults() {
-            console.log('🔄 Resetting timing to defaults');
-            
-            if (!currentKitchen) {
-                alert('No kitchen found. Please login as a cook first.');
-                return;
-            }
-            
-            // Reset to automatic timing
-            currentKitchen.autoTiming = true;
-            currentKitchen.openingTime = "09:00";
-            currentKitchen.closingTime = "21:00";
-            currentKitchen.isOpen = true;
-            
-            // Update UI elements
-            const autoRadio = document.getElementById('autoTimingRadio');
-            const manualRadio = document.getElementById('manualTimingRadio');
-            const manualSection = document.getElementById('manualTimingSection');
-            const openingTime = document.getElementById('openingTime');
-            const closingTime = document.getElementById('closingTime');
-            const kitchenCheckbox = document.getElementById('kitchenOpenCheckbox');
-            
-            if (autoRadio) autoRadio.checked = true;
-            if (manualRadio) manualRadio.checked = false;
-            if (manualSection) manualSection.style.display = 'none';
-            if (openingTime) openingTime.value = "09:00";
-            if (closingTime) closingTime.value = "21:00";
-            if (kitchenCheckbox) kitchenCheckbox.checked = true;
-            
-            updateKitchenStatusDisplay();
-            alert('✅ Timing reset to defaults!\n\nMode: Automatic\nHours: 9:00 AM - 9:00 PM\nStatus: Open');
-        }
-        
-        // Initialize kitchen timing settings
-        function initializeKitchenTiming() {
-            console.log('🔧 Initializing kitchen timing settings');
-            
-            if (!currentKitchen) return;
-            
-            // Load profile data
-            const nameInput = document.getElementById('kitchenNameInput');
-            const specialtyInput = document.getElementById('kitchenSpecInput');
-            const descriptionInput = document.getElementById('kitchenDescInput');
-            
-            if (nameInput) nameInput.value = currentKitchen.name || '';
-            if (specialtyInput) specialtyInput.value = currentKitchen.specialty || '';
-            if (descriptionInput) descriptionInput.value = currentKitchen.description || '';
-            
-            // Set timing mode
-            const autoRadio = document.getElementById('autoTimingRadio');
-            const manualRadio = document.getElementById('manualTimingRadio');
-            const manualSection = document.getElementById('manualTimingSection');
-            const openingTime = document.getElementById('openingTime');
-            const closingTime = document.getElementById('closingTime');
-            
-            if (autoRadio && manualRadio) {
-                autoRadio.checked = currentKitchen.autoTiming;
-                manualRadio.checked = !currentKitchen.autoTiming;
-            }
-            
-            if (openingTime) openingTime.value = currentKitchen.openingTime;
-            if (closingTime) closingTime.value = currentKitchen.closingTime;
-            
-            // Show/hide manual section based on timing mode
-            if (manualSection) {
-                manualSection.style.display = currentKitchen.autoTiming ? 'none' : 'block';
-            }
-            
-            updateKitchenStatusDisplay();
-            console.log('✅ Kitchen timing initialized');
-        }
-        
-        // Helper function to update kitchen status display
-        function updateKitchenStatusDisplay() {
-            if (!currentKitchen) return;
-            
-            const statusDiv = document.getElementById('kitchenStatusDisplay');
-            const statusText = document.getElementById('statusText');
-            const statusDot = document.getElementById('statusDot');
-            const timingDetails = document.getElementById('timingDetails');
-            const kitchenCheckbox = document.getElementById('kitchenOpenCheckbox');
-            
-            // Update checkbox
-            if (kitchenCheckbox) {
-                kitchenCheckbox.checked = currentKitchen.isOpen;
-            }
-            
-            // Update status display
-            if (statusDiv && statusText) {
-                if (currentKitchen.isOpen) {
-                    statusDiv.style.backgroundColor = '#C8E6C9';
-                    statusDiv.style.color = '#2E7D32';
-                    statusText.innerText = 'Kitchen is Open';
-                    if (statusDot) statusDot.style.backgroundColor = '#4CAF50';
-                } else {
-                    statusDiv.style.backgroundColor = '#FFCDD2';
-                    statusDiv.style.color = '#d32f2f';
-                    statusText.innerText = 'Kitchen is Closed';
-                    if (statusDot) statusDot.style.backgroundColor = '#d32f2f';
-                }
-            }
-            
-            // Update timing details
-            if (timingDetails) {
-                const mode = currentKitchen.autoTiming ? 'Automatic' : 'Manual';
-                timingDetails.innerText = `${mode} timing: ${currentKitchen.openingTime} - ${currentKitchen.closingTime}`;
-            }
-        }
-        function addMyMenuItem() { alert('Add menu item clicked - external script will handle this'); }
-        function openSupportForm() { alert('Support form clicked - external script will handle this'); }
-        function closeSupportForm() { const modal = document.getElementById('supportFormModal'); if (modal) modal.style.display = 'none'; }
-        function submitSupportTicket(e) { e.preventDefault(); alert('Support ticket submitted - external script will handle this'); }
-        function toggleNotifications() { alert('Notifications clicked - external script will handle this'); }
-        function scrollToCart() { alert('Scroll to cart clicked - external script will handle this'); }
-        function backToKitchens() { alert('Back to kitchens clicked - external script will handle this'); }
-        function filterMenu(cat) { alert('Filter menu clicked: ' + cat + ' - external script will handle this'); }
-        function placeOrder() { alert('Place order clicked - external script will handle this'); }
-        function backToCart() { alert('Back to cart clicked - external script will handle this'); }
-        function confirmPayment() { alert('Confirm payment clicked - external script will handle this'); }
-        function showAdminSection(section) { alert('Admin section clicked: ' + section + ' - external script will handle this'); }
-        function closeSupportModal() { const modal = document.getElementById('supportTicketModal'); if (modal) modal.style.display = 'none'; }
-        function respondToTicket() { alert('Respond to ticket clicked - external script will handle this'); }
-        function decreaseQuantity() { alert('Decrease quantity clicked - external script will handle this'); }
-        function increaseQuantity() { alert('Increase quantity clicked - external script will handle this'); }
-        function closeModal() { const modal = document.getElementById('customModal'); if (modal) modal.style.display = 'none'; }
-        function confirmAddToCart() { alert('Add to cart clicked - external script will handle this'); }
-        
-        // Make all functions globally available
-        window.saveKitchenProfile = saveKitchenProfile;
-        window.resetProfileForm = resetProfileForm;
-        window.setTimingMode = setTimingMode;
-        window.toggleKitchenStatus = toggleKitchenStatus;
-        window.saveKitchenTiming = saveKitchenTiming;
-        window.resetTimingToDefaults = resetTimingToDefaults;
-        window.addMyMenuItem = addMyMenuItem;
-        window.openSupportForm = openSupportForm;
-        window.closeSupportForm = closeSupportForm;
-        window.submitSupportTicket = submitSupportTicket;
-        window.toggleNotifications = toggleNotifications;
-        window.scrollToCart = scrollToCart;
-        window.backToKitchens = backToKitchens;
-        window.filterMenu = filterMenu;
-        window.placeOrder = placeOrder;
-        window.backToCart = backToCart;
-        window.confirmPayment = confirmPayment;
-        window.showAdminSection = showAdminSection;
-        window.closeSupportModal = closeSupportModal;
-        window.respondToTicket = respondToTicket;
-        window.decreaseQuantity = decreaseQuantity;
-        window.increaseQuantity = increaseQuantity;
-        window.closeModal = closeModal;
-        window.confirmAddToCart = confirmAddToCart;
-        
-        console.log('✅ Direct functions loaded and available');
-        console.log('Functions check:', {
-            goToLogin: typeof goToLogin,
-            showScreen: typeof showScreen,
-            handleLogin: typeof handleLogin,
-            logout: typeof logout
-        });
-    </script>
-    
+    <!-- External JavaScript File -->
     <script src="script.js"></script>
-    
-    <script>
-        // Final verification
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🎯 Page fully loaded - final verification');
-            console.log('✅ goToLogin:', typeof window.goToLogin);
-            console.log('✅ All login buttons should now work!');
-            
-            // Test the function directly
-            if (typeof window.goToLogin === 'function') {
-                console.log('🎉 SUCCESS: Login buttons are ready to use!');
-            } else {
-                console.error('❌ FAILED: goToLogin function still not available');
-            }
-        });
-    </script>
 </body>
 </html>
